@@ -252,13 +252,9 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
                 textDecoration: 'none'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 6px 14px rgba(88, 101, 242, 0.3)';
                 e.currentTarget.style.backgroundColor = '#4752c4';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 10px rgba(88, 101, 242, 0.15)';
                 e.currentTarget.style.backgroundColor = '#5865F2';
               }}
             >
@@ -517,8 +513,7 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
                               fontFamily: 'monospace',
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '6px',
-                              transition: 'color 0.2s ease'
+                              gap: '6px'
                             }}>
                               {guild.ownerId || 'N/A'}
                               {guild.ownerId && (
@@ -784,7 +779,6 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
                                 borderColor: formStatus === statusOpt.value ? 'var(--primary)' : 'rgba(255,255,255,0.04)',
                                 borderRadius: '10px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
                                 textAlign: 'left'
                               }}
                             >
@@ -847,15 +841,11 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
                             gap: '8px',
                             background: saveSuccess ? '#10b981' : 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
                             border: 'none',
-                            cursor: 'pointer',
-                            transition: 'all 0.25s ease'
+                            cursor: 'pointer'
                           }}
                         >
                           {saveLoading ? (
-                            <>
-                              <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                              Saving Changes...
-                            </>
+                            'Saving Changes...'
                           ) : saveSuccess ? (
                             <>
                               <Check size={16} />
@@ -1017,7 +1007,6 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
           border: 1px solid transparent;
           border-radius: 10px;
           cursor: pointer;
-          transition: all 0.25s ease;
         }
         .segmented-btn:hover {
           color: #fff;
@@ -1039,12 +1028,10 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
           background: rgba(30, 41, 59, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.03);
           border-radius: 10px;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .stat-card:hover {
           background: rgba(30, 41, 59, 0.35);
           border-color: rgba(99, 102, 241, 0.15);
-          transform: translateY(-1px);
         }
         .stat-icon-wrapper {
           display: flex;
@@ -1100,22 +1087,15 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
           background: rgba(30, 41, 59, 0.22);
           border: 1px solid rgba(255, 255, 255, 0.04);
           border-radius: 12px;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .server-card-horizontal:hover {
-          transform: translateY(-2px);
           border-color: rgba(99, 102, 241, 0.2);
-          box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.12);
           background: rgba(30, 41, 59, 0.4);
         }
 
         /* Copy icon hover details */
         .copy-icon-hover {
-          transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-        div[title*="copy"]:hover .copy-icon-hover {
-          opacity: 0.8 !important;
-          transform: scale(1.1);
+          opacity: 0.5;
         }
 
         /* Server Action Buttons */
@@ -1130,7 +1110,6 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
           font-weight: 600;
           display: inline-flex;
           align-items: center;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-action-copy {
           background: rgba(255, 255, 255, 0.02);
@@ -1140,7 +1119,6 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
         .btn-action-copy:hover {
           background: rgba(255, 255, 255, 0.06);
           border-color: rgba(255, 255, 255, 0.15);
-          transform: translateY(-1px);
         }
         .btn-action-copy.copied {
           background: rgba(16, 185, 129, 0.1);
@@ -1155,25 +1133,14 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
         .btn-action-leave:hover {
           background: rgba(244, 63, 94, 0.1);
           border-color: var(--danger);
-          box-shadow: 0 4px 12px rgba(244, 63, 94, 0.15);
-          transform: translateY(-1px);
         }
         .btn-action-configure {
           background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
           border: none;
           color: white;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
         }
         .btn-action-configure:hover {
           filter: brightness(1.1);
-          box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
-          transform: translateY(-1px);
-        }
-        .btn-action-configure svg {
-          transition: transform 0.3s ease;
-        }
-        .btn-action-configure:hover svg {
-          transform: rotate(45deg);
         }
 
         /* User Card design */
@@ -1189,14 +1156,11 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
           flex-direction: column;
           justify-content: space-between;
           gap: 16px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           overflow: hidden;
           text-align: left;
         }
         .user-card:hover {
-          transform: translateY(-3px);
           border-color: rgba(99, 102, 241, 0.2);
-          box-shadow: 0 14px 35px -8px rgba(99, 102, 241, 0.12);
         }
         .user-card::before {
           content: '';

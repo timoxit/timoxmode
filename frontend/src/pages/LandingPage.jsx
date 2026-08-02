@@ -330,12 +330,10 @@ export default function LandingPage({ onAdminLogin }) {
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(88, 101, 242, 0.3)';
                   e.currentTarget.style.borderColor = 'rgba(88, 101, 242, 0.6)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'rgba(88, 101, 242, 0.15)';
                   e.currentTarget.style.borderColor = 'rgba(88, 101, 242, 0.4)';
-                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
                 <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor">

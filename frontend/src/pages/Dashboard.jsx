@@ -346,7 +346,6 @@ function DiscordMessagePreview({
                       alignItems: 'center',
                       gap: '6px',
                       cursor: 'pointer',
-                      transition: 'background-color 0.2s',
                     }}
                   >
                     <span>{btn.label}</span>
@@ -2837,8 +2836,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                     padding: '6px 12px', 
                                     borderRadius: '4px',
                                     fontSize: '0.8rem', 
-                                    fontWeight: 'bold',
-                                    transition: 'all 0.2s ease'
+                                    fontWeight: 'bold'
                                   }}
                                 >
                                   Remove
@@ -3147,8 +3145,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         padding: '6px 12px', 
                                         borderRadius: '4px',
                                         fontSize: '0.8rem', 
-                                        fontWeight: 'bold',
-                                        transition: 'all 0.2s ease'
+                                        fontWeight: 'bold'
                                       }}
                                     >
                                       Remove
@@ -3207,7 +3204,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                   border: `2px solid ${settings.welcome.layoutType === layoutOption.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)'}`,
                                   backgroundColor: settings.welcome.layoutType === layoutOption.id ? 'var(--primary-glow)' : 'rgba(255,255,255,0.02)',
                                   cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
                                   display: 'flex',
                                   flexDirection: 'column',
                                   gap: '4px'
@@ -4366,7 +4362,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                     border: `2px solid ${settings.verification.type === methodOption.id || (!settings.verification.type && methodOption.id === 'button') ? 'var(--primary)' : 'rgba(255,255,255,0.05)'}`,
                                     backgroundColor: settings.verification.type === methodOption.id || (!settings.verification.type && methodOption.id === 'button') ? 'var(--primary-glow)' : 'rgba(255,255,255,0.02)',
                                     cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     gap: '4px'
@@ -6896,21 +6891,8 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                 boxShadow: isPollActive
                                   ? `0 0 30px ${themeColor}22, 0 8px 32px rgba(0,0,0,0.5)`
                                   : '0 8px 32px rgba(0,0,0,0.4)',
-                                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                                 cursor: 'default',
                                 overflow: 'hidden'
-                              }}
-                              onMouseEnter={e => {
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                e.currentTarget.style.boxShadow = isPollActive
-                                  ? `0 0 40px ${themeColor}33, 0 16px 48px rgba(0,0,0,0.6)`
-                                  : '0 16px 48px rgba(0,0,0,0.6)';
-                              }}
-                              onMouseLeave={e => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = isPollActive
-                                  ? `0 0 30px ${themeColor}22, 0 8px 32px rgba(0,0,0,0.5)`
-                                  : '0 8px 32px rgba(0,0,0,0.4)';
                               }}
                             >
                               {/* Subtle top accent line */}
@@ -7010,7 +6992,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                             ? 'linear-gradient(90deg, #ca8a04, #fde047)'
                                             : `linear-gradient(90deg, ${themeColor}, ${themeColor}cc)`,
                                           borderRadius: '999px',
-                                          transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)',
                                           position: 'relative',
                                           boxShadow: pct > 0 ? `0 0 10px ${barColor}88` : 'none'
                                         }}>
@@ -7079,7 +7060,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         color: '#fbbf24',
                                         borderRadius: '8px',
                                         cursor: 'pointer',
-                                        transition: 'all 0.2s ease',
                                         letterSpacing: '0.03em'
                                       }}
                                       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,191,36,0.2)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(251,191,36,0.25)'; }}
@@ -7100,7 +7080,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                       color: '#f87171',
                                       borderRadius: '8px',
                                       cursor: 'pointer',
-                                      transition: 'all 0.2s ease',
                                       letterSpacing: '0.03em'
                                     }}
                                     onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.18)'; e.currentTarget.style.boxShadow = '0 0 12px rgba(239,68,68,0.2)'; }}

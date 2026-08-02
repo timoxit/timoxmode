@@ -852,7 +852,6 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
             cursor: 'pointer',
             padding: '10px 16px',
             borderBottom: activeSubTab === 'settings' ? '2px solid var(--primary)' : '2px solid transparent',
-            transition: 'all 0.2s ease',
             fontFamily: 'Outfit'
           }}
         >
@@ -870,7 +869,6 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
             cursor: 'pointer',
             padding: '10px 16px',
             borderBottom: activeSubTab === 'members' ? '2px solid var(--primary)' : '2px solid transparent',
-            transition: 'all 0.2s ease',
             fontFamily: 'Outfit'
           }}
         >
@@ -888,7 +886,6 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
             cursor: 'pointer',
             padding: '10px 16px',
             borderBottom: activeSubTab === 'bulk-nicknames' ? '2px solid var(--primary)' : '2px solid transparent',
-            transition: 'all 0.2s ease',
             fontFamily: 'Outfit'
           }}
         >
@@ -906,7 +903,6 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
             cursor: 'pointer',
             padding: '10px 16px',
             borderBottom: activeSubTab === 'youtube' ? '2px solid var(--primary)' : '2px solid transparent',
-            transition: 'all 0.2s ease',
             fontFamily: 'Outfit'
           }}
         >
@@ -1189,7 +1185,6 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
                         borderRadius: '8px', 
                         backgroundColor: channel.type === 4 ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.01)', 
                         border: '1px solid rgba(255,255,255,0.03)',
-                        transition: 'all 0.2s ease',
                         fontWeight: channel.type === 4 ? '700' : '400',
                         marginLeft: channel.type !== 4 && channel.parentId ? '20px' : '0px'
                       }}
@@ -1252,7 +1247,7 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
                                 setEditingChannelId(channel.id);
                                 setEditingChannelName(channel.name);
                               }} 
-                              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', transition: 'color 0.2s' }}
+                              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                               onMouseEnter={(e) => e.currentTarget.style.color = '#ffffff'}
                               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
                               title="Rename"
@@ -1263,7 +1258,7 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
                               type="button"
                               onClick={() => handleDeleteChannel(channel.id, channel.name)} 
                               disabled={deletingChannelId === channel.id}
-                              style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.7, transition: 'opacity 0.2s' }}
+                              style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', opacity: 0.7 }}
                               onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
                               onMouseLeave={(e) => e.currentTarget.style.opacity = 0.7}
                               title="Delete"
@@ -1353,7 +1348,7 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
                 </thead>
                 <tbody>
                   {members.map(member => (
-                    <tr key={member.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.02)', transition: 'background-color 0.2s' }} className="member-row">
+                    <tr key={member.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.02)' }} className="member-row">
                       {/* Avatar + Username */}
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1736,8 +1731,7 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
                       width: `${nicknameProgress.total > 0 ? (nicknameProgress.current / nicknameProgress.total) * 100 : 0}%`,
                       height: '100%',
                       backgroundColor: 'var(--primary)',
-                      borderRadius: '4px',
-                      transition: 'width 0.3s ease'
+                      borderRadius: '4px'
                     }} />
                   </div>
                 </div>
@@ -2399,7 +2393,6 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
                           backgroundColor: isChecked ? 'rgba(255,255,255,0.03)' : 'transparent',
                           cursor: isManageable ? 'pointer' : 'not-allowed',
                           opacity: isManageable ? 1 : 0.5,
-                          transition: 'background-color 0.2s',
                           border: `1px solid ${isChecked ? 'rgba(255,255,255,0.08)' : 'transparent'}`
                         }}
                       >

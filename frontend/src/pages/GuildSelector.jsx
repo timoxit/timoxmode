@@ -88,13 +88,9 @@ export default function GuildSelector({ user, onSelectGuild, onLogout }) {
                 textDecoration: 'none'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 6px 14px rgba(88, 101, 242, 0.35)';
                 e.currentTarget.style.backgroundColor = '#4752c4';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 10px rgba(88, 101, 242, 0.2)';
                 e.currentTarget.style.backgroundColor = '#5865F2';
               }}
             >
