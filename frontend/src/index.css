@@ -906,18 +906,6 @@ input:checked + .slider:before {
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-.btn-nav-servers {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background-color: #121826;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  color: #fff;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
 }
 
 .btn-nav-servers:hover {
