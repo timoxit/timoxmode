@@ -30,10 +30,14 @@
   --warning: #f59e0b;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  animation: none !important;
+  transition: none !important;
 }
 
 body {
@@ -957,13 +961,10 @@ input:checked + .slider:before {
 }
 
 
-/* Disable all animations and transitions on Dashboard */
-.dashboard-root-layout,
-.dashboard-root-layout *,
-.dashboard-root-layout *::before,
-.dashboard-root-layout *::after,
-.liquid-blob-1,
-.liquid-blob-2 {
+/* Disable all animations and transitions site-wide */
+*,
+*::before,
+*::after {
   animation: none !important;
   transition: none !important;
 }
