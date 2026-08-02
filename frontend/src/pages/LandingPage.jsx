@@ -300,7 +300,7 @@ export default function LandingPage({ onAdminLogin }) {
               <button 
                 onClick={handleLogin} 
                 disabled={loading}
-                className="btn-primary pulse-glow" 
+                className="btn-primary" 
                 style={{ fontSize: '1rem', height: '48px', padding: '0 28px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1' }}
               >
                 {loading ? 'Connecting...' : 'Connect Discord Account'}

@@ -86,11 +86,10 @@ export default function AdminLogin({ onBack, onLoginSuccess }) {
         </button>
 
         {/* Login Card */}
-        <div className="glass-panel pulse-glow" style={{ 
+        <div className="glass-panel" style={{ 
           padding: '40px 32px', 
           width: '100%',
-          borderColor: 'rgba(99, 102, 241, 0.3)',
-          boxShadow: '0 8px 32px 0 rgba(99, 102, 241, 0.15)'
+          borderColor: 'var(--border-color)'
         }}>
           
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>

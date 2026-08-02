@@ -69,29 +69,13 @@ export default function App() {
   if (authLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '20px' }}>
-        <div style={{
-          width: '50px',
-          height: '50px',
-          border: '5px solid rgba(37, 99, 235, 0.1)',
-          borderTopColor: 'var(--primary)',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
         <h3 style={{ fontFamily: 'Outfit', fontWeight: '700' }}>Authenticating with Discord...</h3>
-        <style dangerouslySetInnerHTML={{__html: `
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}} />
       </div>
     );
   }
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', overflowX: 'hidden' }}>
-      {/* Background Liquid Blobs */}
-      <div className="liquid-blob-1" />
-      <div className="liquid-blob-2" />
       
       {authError && (
         <div className="glass-panel" style={{

@@ -820,12 +820,7 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 0' }}>
-        <Loader size={40} className="spin" style={{ color: 'var(--primary)', marginBottom: '16px' }} />
         <p style={{ color: 'var(--text-secondary)' }}>Loading live server settings...</p>
-        <style dangerouslySetInnerHTML={{__html: `
-          .spin { animation: spin 1s linear infinite; }
-          @keyframes spin { to { transform: rotate(360deg); } }
-        `}} />
       </div>
     );
   }
@@ -2471,11 +2466,6 @@ export default function AdminServerSettings({ guildId, onHasUnsavedChangesChange
       )}
 
       <style dangerouslySetInnerHTML={{__html: `
-        .spin { animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .member-row:hover { background-color: rgba(255, 255, 255, 0.015) !important; }
       `}} />
     </div>

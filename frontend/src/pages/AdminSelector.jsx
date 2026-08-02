@@ -286,7 +286,7 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
             
             {/* Sidebar Heading / Portal Title */}
             <div style={{ textAlign: 'center', padding: '10px 0 20px 0', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-              <div className="pulse-glow" style={{
+              <div style={{
                 width: '52px',
                 height: '52px',
                 borderRadius: '14px',
@@ -423,15 +423,6 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
                 {/* Servers List */}
                 {loading ? (
                   <div style={{ textAlign: 'center', padding: '80px' }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      border: '4px solid rgba(99, 102, 241, 0.2)',
-                      borderTopColor: 'var(--primary)',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                      margin: '0 auto 16px auto'
-                    }} />
                     <p style={{ color: 'var(--text-secondary)' }}>Fetching global server listings...</p>
                   </div>
                 ) : error ? (
@@ -1001,10 +992,6 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
 
       {/* Scoped CSS styling */}
       <style dangerouslySetInnerHTML={{__html: `
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
         /* Segmented control tabs */
         .segmented-control {
           display: flex;

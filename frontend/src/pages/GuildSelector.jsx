@@ -228,21 +228,7 @@ export default function GuildSelector({ user, onSelectGuild, onLogout }) {
             {/* Content Area */}
             {loading ? (
               <div style={{ textAlign: 'center', padding: '60px' }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  border: '4px solid rgba(37, 99, 235, 0.2)',
-                  borderTopColor: 'var(--primary)',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                  margin: '0 auto 16px auto'
-                }} />
                 <p style={{ color: 'var(--text-secondary)' }}>Loading servers...</p>
-                <style dangerouslySetInnerHTML={{__html: `
-                  @keyframes spin {
-                    to { transform: rotate(360deg); }
-                  }
-                `}} />
               </div>
             ) : error ? (
               <div className="glass-panel" style={{ padding: '30px', textAlign: 'center', borderColor: 'var(--danger)' }}>

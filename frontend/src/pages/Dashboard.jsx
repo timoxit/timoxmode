@@ -2357,7 +2357,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
         <main className="dashboard-right-content">
           {/* Global Notifications */}
           {successMsg && (
-            <div className="glass-panel pulse-glow" style={{
+            <div className="glass-panel" style={{
               position: 'fixed',
               bottom: '20px',
               right: '20px',
@@ -5513,7 +5513,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                           type="button" 
                           onClick={handleSendBroadcast} 
                           disabled={broadcasting} 
-                          className="btn-primary pulse-glow"
+                          className="btn-primary"
                           style={{ gap: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '42px', padding: '0 20px', fontSize: '0.85rem' }}
                         >
                           <Send size={18} />
@@ -6187,7 +6187,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                           type="button" 
                           onClick={handleSendChannelMessage} 
                           disabled={publishing} 
-                          className="btn-primary pulse-glow"
+                          className="btn-primary"
                           style={{ gap: '10px' }}
                         >
                           <Send size={18} />
@@ -6794,7 +6794,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                           type="button" 
                           onClick={handleCreatePoll} 
                           disabled={creatingPoll} 
-                          className="btn-primary pulse-glow"
+                          className="btn-primary"
                           style={{ gap: '10px' }}
                         >
                           <Send size={18} />
@@ -7134,7 +7134,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                   <button 
                     type="submit" 
                     disabled={saving} 
-                    className="btn-primary pulse-glow"
+                    className="btn-primary"
                     style={{ gap: '10px' }}
                   >
                     <Save size={18} />
