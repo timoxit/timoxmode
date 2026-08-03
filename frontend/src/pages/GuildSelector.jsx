@@ -31,64 +31,77 @@ export default function GuildSelector({ user, onSelectGuild, onLogout }) {
   );
 
   return (
-    <div style={{ minHeight: '100vh', padding: '32px 20px', backgroundColor: 'var(--bg-primary)' }}>
+    <div style={{ minHeight: '100vh', padding: '40px 20px' }}>
       
       {/* Centered Header Bar */}
       <div className="container">
-        <header className="pro-card" style={{
+        <header className="glass-panel" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '14px 24px',
-          marginBottom: '24px'
+          padding: '16px 24px',
+          marginBottom: '30px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {user.avatar ? (
               <img 
                 src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} 
                 alt={user.username}
-                style={{ width: '38px', height: '38px', borderRadius: '50%', border: '1.5px solid var(--primary)' }}
+                style={{ width: '40px', height: '40px', borderRadius: '50%', border: '1.5px solid var(--primary)' }}
               />
             ) : (
               <div style={{
-                width: '38px',
-                height: '38px',
+                width: '40px',
+                height: '40px',
                 borderRadius: '50%',
                 backgroundColor: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: '600'
+                fontWeight: '500'
               }}>
                 {user.username.substring(0, 2).toUpperCase()}
               </div>
             )}
             <div>
-              <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{user.username}</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Discord Control Center</div>
+              <div style={{ fontWeight: '600', fontSize: '1rem' }}>{user.username}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Welcome Back</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <a 
               href="https://discord.gg/ZVfJvw93Ak" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="btn-primary" 
               style={{ 
-                padding: '8px 14px', 
+                padding: '8px 16px', 
                 fontSize: '0.85rem', 
+                backgroundColor: '#5865F2', 
+                backgroundImage: 'none',
+                boxShadow: '0 4px 10px rgba(88, 101, 242, 0.2)',
+                borderRadius: '8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
                 textDecoration: 'none'
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#4752c4';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#5865F2';
+              }}
             >
-              <svg width="15" height="15" viewBox="0 0 127.14 96.36" fill="currentColor">
+              <svg width="16" height="16" viewBox="0 0 127.14 96.36" fill="currentColor">
                 <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C-3.66,42.5-9.84,76.19,10,95.91a105.73,105.73,0,0,0,32,16.29,80.59,80.59,0,0,0,6.83-11.16A68.61,68.61,0,0,1,38.31,95a55.15,55.15,0,0,0,3.75-2.93,74.9,74.9,0,0,0,67.65,0c1.25.93,2.5,1.92,3.75,2.93a68.46,68.46,0,0,1-10.57,6A81,81,0,0,0,109.73,112.2a105.73,105.73,0,0,0,32-16.29C138,76.19,131.79,42.5,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53S36.18,40.36,42.45,40.36,53.83,46,53.83,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53S78.41,40.36,84.69,40.36,96.07,46,96.07,53,91,65.69,84.69,65.69Z"/>
               </svg>
-              Community Server
+              Discord Server
             </a>
 
-            <button onClick={onLogout} className="btn-secondary" style={{ padding: '8px 14px', fontSize: '0.85rem' }}>
-              <LogOut size={15} />
+            <button onClick={onLogout} className="btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
+              <LogOut size={16} />
               Logout
             </button>
           </div>
@@ -101,26 +114,27 @@ export default function GuildSelector({ user, onSelectGuild, onLogout }) {
         <div className="selector-layout">
           
           {/* Left Column: Sidebar panel */}
-          <aside className="pro-card sidebar-panel">
+          <aside className="glass-panel sidebar-panel">
             {/* Sidebar Profile details */}
             <div className="sidebar-profile">
               {user.avatar ? (
                 <img 
                   src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} 
                   alt={user.username}
-                  style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid var(--primary)' }}
+                  style={{ width: '70px', height: '70px', borderRadius: '50%', border: '2px solid var(--primary)', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)' }}
                 />
               ) : (
                 <div style={{
-                  width: '64px',
-                  height: '64px',
+                  width: '70px',
+                  height: '70px',
                   borderRadius: '50%',
                   backgroundColor: 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.4rem',
-                  fontWeight: '600'
+                  fontSize: '1.5rem',
+                  fontWeight: '600',
+                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)'
                 }}>
                   {user.username.substring(0, 2).toUpperCase()}
                 </div>

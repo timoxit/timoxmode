@@ -1,19 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;900&family=Montserrat:wght@400;500;600;700;900&family=Bebas+Neue&family=Orbitron:wght@400;700;900&family=Oswald:wght@400;700&family=Roboto:wght@400;500;700;900&family=Oxanium:wght@400;700;900&family=Permanent+Marker&display=swap');
+
+@font-face {
+  font-family: 'Ethnocentric';
+  src: url('./assets/fonts/Ethnocentric.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
 
 :root {
-  --bg-primary: #090c15;
-  --bg-secondary: #0e1322;
-  --bg-card: #121829;
-  --bg-card-hover: #171f33;
-  --border-color: #1e293b;
-  --border-hover: #334155;
-  --border-glow: transparent;
+  --bg-primary: #04060f;
+  --bg-secondary: #070a13;
+  --bg-card: #090d16;
+  --border-color: rgba(255, 255, 255, 0.04);
+  --border-glow: rgba(37, 99, 235, 0.1);
   
-  --primary: #5865f2; /* Discord / Developer Indigo */
-  --primary-glow: rgba(88, 101, 242, 0.15);
-  --primary-hover: #4752c4;
-  --secondary: #0ea5e9; /* Sky */
-  --secondary-glow: rgba(14, 165, 233, 0.15);
+  --primary: #2563eb; /* Royal Blue */
+  --primary-glow: rgba(37, 99, 235, 0.12);
+  --primary-hover: #1d4ed8;
+  --secondary: #38bdf8; /* Sky Blue */
+  --secondary-glow: rgba(56, 189, 248, 0.15);
   --accent: #8b5cf6; /* Violet */
   
   --text-primary: #f8fafc;
@@ -31,22 +36,24 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  animation: none !important;
+  transition: none !important;
 }
 
 body {
   background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 40%),
+    radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.03) 0px, transparent 40%);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Inter', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  letter-spacing: -0.025em;
-  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* Custom Scrollbar */
@@ -58,134 +65,154 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: rgba(99, 102, 241, 0.2);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: rgba(99, 102, 241, 0.4);
 }
 
-/* Clean Developer Panels & Cards */
-.glass-panel, .pro-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(15, 22, 42, 0.35);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
+    0 8px 32px 0 rgba(0, 0, 0, 0.4);
   position: relative;
   overflow: hidden;
 }
 
-.glass-panel:hover, .pro-card:hover {
-  border-color: var(--border-hover);
+.glass-panel:hover {
+  border-color: rgba(99, 102, 241, 0.35);
 }
 
-.glass-input, .pro-input {
-  background: #090d16;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+.glass-input {
+  background: rgba(8, 12, 24, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.9rem;
-  padding: 10px 14px;
+  padding: 12px 16px;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
   width: 100%;
 }
 
-.glass-input:focus, .pro-input:focus {
+.glass-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
-  background: #0b101c;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 3px rgba(99, 102, 241, 0.25),
+    0 0 20px 0 rgba(99, 102, 241, 0.15);
+  background: rgba(8, 12, 24, 0.75);
 }
 
-.glass-input:disabled, .pro-input:disabled {
+.glass-input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 .btn-primary {
-  background: var(--primary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #ffffff;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.75) 0%, rgba(79, 70, 229, 0.8) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: white;
   cursor: pointer;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
-  padding: 10px 18px;
-  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  font-size: 0.925rem;
+  padding: 10px 20px;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3),
+    0 4px 15px 0 rgba(99, 102, 241, 0.25);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 2px 8px rgba(88, 101, 242, 0.25);
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(79, 70, 229, 0.95) 100%);
 }
 
 .btn-secondary {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   color: var(--text-primary);
   cursor: pointer;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 500;
-  font-size: 0.9rem;
-  padding: 10px 18px;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  font-size: 0.925rem;
+  padding: 10px 20px;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .btn-secondary:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .btn-danger {
-  background: #dc2626;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.75) 0%, rgba(190, 18, 60, 0.8) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
   color: white;
   cursor: pointer;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
-  padding: 10px 18px;
-  transition: background-color 0.15s ease;
+  font-size: 0.925rem;
+  padding: 10px 20px;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3),
+    0 4px 15px 0 rgba(239, 68, 68, 0.25);
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .btn-danger:hover {
-  background: #b91c1c;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(190, 18, 60, 0.95) 100%);
 }
 
 .btn-success {
-  background: #059669;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.75) 0%, rgba(4, 120, 87, 0.8) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
   color: white;
   cursor: pointer;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
-  padding: 10px 18px;
-  transition: background-color 0.15s ease;
+  font-size: 0.925rem;
+  padding: 10px 20px;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3),
+    0 4px 15px 0 rgba(16, 185, 129, 0.25);
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .btn-success:hover {
-  background: #047857;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(4, 120, 87, 0.95) 100%);
 }
+
+
 
 /* Swinger toggle switch */
 .switch {
