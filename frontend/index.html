@@ -5,59 +5,6 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TIMOXITER - Discord Bot Dashboard</title>
-    <script>
-      (function() {
-        const closeSite = function() {
-          document.documentElement.innerHTML = '<div style="background:#090d16;color:#ef4444;height:100vh;display:flex;justify-content:center;align-items:center;font-family:sans-serif;font-weight:700;font-size:1.5rem;">Access Denied: Developer Tools are restricted.</div>';
-          window.location.href = 'about:blank';
-          try { window.close(); } catch(e) {}
-        };
-
-        const threshold = 100;
-        const checkDimensions = function() {
-          if ((window.outerWidth - window.innerWidth > threshold) || (window.outerHeight - window.innerHeight > threshold)) {
-            closeSite();
-          }
-        };
-
-        const checkDebugger = function() {
-          const startTime = performance.now();
-          (function() { return false; })["constructor"]("debugger")();
-          if (performance.now() - startTime > 100) {
-            closeSite();
-          }
-        };
-
-        const checkGetter = function() {
-          const reg = /./;
-          reg.toString = function() {
-            closeSite();
-            return '';
-          };
-          console.log(reg);
-        };
-
-        setInterval(function() {
-          checkDimensions();
-          checkDebugger();
-          checkGetter();
-        }, 100);
-
-        window.addEventListener('resize', checkDimensions);
-        window.addEventListener('load', checkDimensions);
-
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'F12' || 
-             (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c','K','k','E','e'].includes(e.key)) ||
-             (e.metaKey && e.altKey && ['I','i','J','j','C','c','K','k','E','e'].includes(e.key)) ||
-             ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u'))) {
-            e.preventDefault();
-            closeSite();
-          }
-        });
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
