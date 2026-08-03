@@ -31,8 +31,39 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// DevTools Open Detection & Auto-Close Protection for Security
+let isTriggered = false;
+
+function closeSiteForSafety() {
+  if (isTriggered) return;
+  isTriggered = true;
+  document.body.innerHTML = `
+    <div style="background: #090d16; color: #ef4444; height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; text-align: center; padding: 20px; box-sizing: border-box;">
+      <h2 style="margin-bottom: 12px; font-size: 1.5rem; font-weight: 700;">Security Notice</h2>
+      <p style="color: #94a3b8; font-size: 0.95rem; max-width: 450px; line-height: 1.5;">Browser Developer Tools are restricted on this website for security reasons. Closing session...</p>
+    </div>
+  `;
+  setTimeout(() => {
+    window.location.href = 'about:blank';
+  }, 800);
+}
+
+function checkDevTools() {
+  const widthDiff = window.outerWidth - window.innerWidth > 160;
+  const heightDiff = window.outerHeight - window.innerHeight > 160;
+
+  if (widthDiff || heightDiff) {
+    closeSiteForSafety();
+  }
+}
+
+// Monitor resize and interval
+window.addEventListener('resize', checkDevTools);
+setInterval(checkDevTools, 1000);
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
   </StrictMode>,
 )
+
