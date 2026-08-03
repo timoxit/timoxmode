@@ -24,21 +24,7 @@ const checkWindowDimensions = () => {
   }
 };
 
-// 2. Debugger timing analysis (detects floating or separate window DevTools)
-const checkDebuggerTiming = () => {
-  const start = performance.now();
-  try {
-    const dbg = new Function('debugger');
-    dbg();
-  } catch (e) {
-    // Ignore function evaluation errors
-  }
-  if (performance.now() - start > 100) {
-    closeWebsiteOnDevTools();
-  }
-};
-
-// 3. Console element getter trick (detects console tab inspection)
+// 2. Console element getter trick (detects console tab inspection)
 const checkConsoleInspection = () => {
   const element = new Image();
   Object.defineProperty(element, 'id', {
@@ -52,7 +38,6 @@ const checkConsoleInspection = () => {
 // Periodically run DevTools detection checks
 setInterval(() => {
   checkWindowDimensions();
-  checkDebuggerTiming();
   checkConsoleInspection();
 }, 500);
 
