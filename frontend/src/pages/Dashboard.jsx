@@ -599,6 +599,10 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
       setErrorMsg('Please enter a valid Discord Webhook URL.');
       return;
     }
+    if (!webhookMessageContent && (!webhookEmbedEnabled || (!webhookEmbedTitle && !webhookEmbedDesc && webhookEmbedFields.length === 0))) {
+      setErrorMsg('Cannot send an empty announcement. Please enter message content or fill out an embed title/description.');
+      return;
+    }
 
     setSendingWebhook(true);
     setErrorMsg(null);
