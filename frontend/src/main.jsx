@@ -27,8 +27,12 @@ const checkWindowDimensions = () => {
 // 2. Debugger timing analysis (detects floating or separate window DevTools)
 const checkDebuggerTiming = () => {
   const start = performance.now();
-  // eslint-disable-next-line no-debugger
-  debugger;
+  try {
+    const dbg = new Function('debugger');
+    dbg();
+  } catch (e) {
+    // Ignore function evaluation errors
+  }
   if (performance.now() - start > 100) {
     closeWebsiteOnDevTools();
   }
