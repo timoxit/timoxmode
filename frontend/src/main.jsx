@@ -3,7 +3,58 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
-// Disable context menu (right-click)
+// Function to handle automatic site closure when DevTools are opened
+const closeWebsiteOnDevTools = () => {
+  document.body.innerHTML = '<div style="background:#090d16;color:#ef4444;height:100vh;display:flex;justify-content:center;align-items:center;font-family:sans-serif;font-weight:600;font-size:1.2rem;">Access Denied: Developer Tools are restricted.</div>';
+  window.location.href = 'about:blank';
+  try {
+    window.close();
+  } catch (e) {
+    // Ignore error if browser prevents script window.close
+  }
+};
+
+// 1. Check window outer/inner dimension differences (detects docked DevTools in Chrome, Firefox, Edge, Safari)
+const threshold = 160;
+const checkWindowDimensions = () => {
+  const widthDiff = window.outerWidth - window.innerWidth > threshold;
+  const heightDiff = window.outerHeight - window.innerHeight > threshold;
+  if (widthDiff || heightDiff) {
+    closeWebsiteOnDevTools();
+  }
+};
+
+// 2. Debugger timing analysis (detects floating or separate window DevTools)
+const checkDebuggerTiming = () => {
+  const start = performance.now();
+  // eslint-disable-next-line no-debugger
+  debugger;
+  if (performance.now() - start > 100) {
+    closeWebsiteOnDevTools();
+  }
+};
+
+// 3. Console element getter trick (detects console tab inspection)
+const checkConsoleInspection = () => {
+  const element = new Image();
+  Object.defineProperty(element, 'id', {
+    get: function () {
+      closeWebsiteOnDevTools();
+    }
+  });
+  console.log('%c', element);
+};
+
+// Periodically run DevTools detection checks
+setInterval(() => {
+  checkWindowDimensions();
+  checkDebuggerTiming();
+  checkConsoleInspection();
+}, 500);
+
+window.addEventListener('resize', checkWindowDimensions);
+
+// Disable context menu (right-click Inspect)
 document.addEventListener('contextmenu', (e) => {
   e.preventDefault();
 });
@@ -13,53 +64,27 @@ document.addEventListener('keydown', (e) => {
   // Disable F12
   if (e.key === 'F12') {
     e.preventDefault();
+    closeWebsiteOnDevTools();
   }
   
-  // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
-  if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
+  // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+Shift+K
+  if (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c', 'K', 'k', 'E', 'e'].includes(e.key)) {
     e.preventDefault();
+    closeWebsiteOnDevTools();
   }
   
-  // Disable Cmd+Option+I, Cmd+Option+J, Cmd+Option+C (Mac shortcuts)
-  if (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
+  // Disable Cmd+Option+I, Cmd+Option+J, Cmd+Option+C, Cmd+Option+K (Mac shortcuts)
+  if (e.metaKey && e.altKey && ['I', 'i', 'J', 'j', 'C', 'c', 'K', 'k', 'E', 'e'].includes(e.key)) {
     e.preventDefault();
+    closeWebsiteOnDevTools();
   }
   
   // Disable Ctrl+U or Cmd+U (View Source)
   if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
     e.preventDefault();
+    closeWebsiteOnDevTools();
   }
 });
-
-// DevTools Open Detection & Auto-Close Protection for Security
-let isTriggered = false;
-
-function closeSiteForSafety() {
-  if (isTriggered) return;
-  isTriggered = true;
-  document.body.innerHTML = `
-    <div style="background: #090d16; color: #ef4444; height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; text-align: center; padding: 20px; box-sizing: border-box;">
-      <h2 style="margin-bottom: 12px; font-size: 1.5rem; font-weight: 700;">Security Notice</h2>
-      <p style="color: #94a3b8; font-size: 0.95rem; max-width: 450px; line-height: 1.5;">Browser Developer Tools are restricted on this website for security reasons. Closing session...</p>
-    </div>
-  `;
-  setTimeout(() => {
-    window.location.href = 'about:blank';
-  }, 800);
-}
-
-function checkDevTools() {
-  const widthDiff = window.outerWidth - window.innerWidth > 160;
-  const heightDiff = window.outerHeight - window.innerHeight > 160;
-
-  if (widthDiff || heightDiff) {
-    closeSiteForSafety();
-  }
-}
-
-// Monitor resize and interval
-window.addEventListener('resize', checkDevTools);
-setInterval(checkDevTools, 1000);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
