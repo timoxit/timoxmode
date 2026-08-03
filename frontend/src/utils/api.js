@@ -260,5 +260,17 @@ export const api = {
   saveBotSettings: (data) => request('/admin/bot-settings', {
     method: 'POST',
     body: JSON.stringify(data)
+  }),
+  sendWebhookAnnouncement: (guildId, data) => request(`/settings/${guildId}/webhook-announcement/send`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  getWebhookTemplates: (guildId) => request(`/settings/${guildId}/webhook-announcement/templates`),
+  saveWebhookTemplate: (guildId, data) => request(`/settings/${guildId}/webhook-announcement/templates`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  deleteWebhookTemplate: (guildId, templateId) => request(`/settings/${guildId}/webhook-announcement/templates/${templateId}`, {
+    method: 'DELETE'
   })
 };

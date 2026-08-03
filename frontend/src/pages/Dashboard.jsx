@@ -29,7 +29,12 @@ import {
   LogOut,
   RotateCw,
   Mic,
-  Webhook
+  Webhook,
+  Link,
+  Radio,
+  Layers,
+  Copy,
+  PlusCircle
 } from 'lucide-react';
 
 const Youtube = ({ size = 24, className = '', style = {} }) => (
@@ -73,7 +78,9 @@ function DiscordMessagePreview({
   embedFooterText = '',
   embedFooterIcon = '',
   embedFields = [],
-  buttons = []
+  buttons = [],
+  customWebhookName = '',
+  customWebhookAvatar = ''
 }) {
   // Resolve placeholders
   const resolvePlaceholders = (text) => {
@@ -105,9 +112,9 @@ function DiscordMessagePreview({
     });
   };
 
-  const botAvatar = botUser?.avatar 
+  const botAvatar = customWebhookAvatar || (botUser?.avatar 
     ? `https://cdn.discordapp.com/avatars/${botUser.id}/${botUser.avatar}.png`
-    : 'https://cdn.discordapp.com/embed/avatars/0.png';
+    : 'https://cdn.discordapp.com/embed/avatars/0.png');
 
   // Construct Ping mention preview node
   let pingPrefixNode = null;
@@ -167,7 +174,7 @@ function DiscordMessagePreview({
         <img 
           src={botAvatar} 
           alt="Avatar" 
-          style={{ width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0 }}
+          style={{ width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0, objectFit: 'cover' }}
         />
         
         {/* Message body container */}
@@ -175,7 +182,7 @@ function DiscordMessagePreview({
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', flexWrap: 'wrap' }}>
             <span style={{ fontWeight: '600', color: '#f2f3f5', fontSize: '1rem' }}>
-              TIMO X MODE
+              {customWebhookName || 'TIMO X MODE'}
             </span>
             <span style={{
               backgroundColor: '#5865F2',
@@ -483,13 +490,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
   const [pubEmbedImage, setPubEmbedImage] = useState('');
   const [publishing, setPublishing] = useState(false);
 
-  // Webhook Announcement Customization States
-  const [useWebhookMode, setUseWebhookMode] = useState(false);
-  const [webhookType, setWebhookType] = useState('channel'); // 'channel' | 'external'
-  const [webhookName, setWebhookName] = useState('Server Announcements');
-  const [webhookAvatar, setWebhookAvatar] = useState('');
-  const [webhookUrlInput, setWebhookUrlInput] = useState('');
-
   const [resolvingChannel, setResolvingChannel] = useState(false);
   const [resolveSuccessMsg, setResolveSuccessMsg] = useState('');
 
@@ -541,6 +541,208 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
   const [pollImageUrl, setPollImageUrl] = useState('');
   const [pollThumbnailUrl, setPollThumbnailUrl] = useState('');
   const [creatingPoll, setCreatingPoll] = useState(false);
+
+  // Webhook Announcement States
+  const [webhookChannelId, setWebhookChannelId] = useState('');
+  const [useCustomWebhookUrl, setUseCustomWebhookUrl] = useState(false);
+  const [customWebhookUrlInput, setCustomWebhookUrlInput] = useState('');
+  const [webhookDisplayName, setWebhookDisplayName] = useState('');
+  const [webhookDisplayAvatar, setWebhookDisplayAvatar] = useState('');
+
+  const [webhookMessageContent, setWebhookMessageContent] = useState('');
+  const [webhookPingType, setWebhookPingType] = useState('none');
+  const [webhookPingRoleId, setWebhookPingRoleId] = useState('');
+
+  const [webhookEmbedEnabled, setWebhookEmbedEnabled] = useState(true);
+  const [webhookEmbedTitle, setWebhookEmbedTitle] = useState('');
+  const [webhookEmbedTitleUrl, setWebhookEmbedTitleUrl] = useState('');
+  const [webhookEmbedDesc, setWebhookEmbedDesc] = useState('');
+  const [webhookEmbedColor, setWebhookEmbedColor] = useState('#2563eb');
+
+  const [webhookAuthorEnabled, setWebhookAuthorEnabled] = useState(false);
+  const [webhookAuthorName, setWebhookAuthorName] = useState('');
+  const [webhookAuthorIcon, setWebhookAuthorIcon] = useState('');
+  const [webhookAuthorUrl, setWebhookAuthorUrl] = useState('');
+
+  const [webhookThumbUrl, setWebhookThumbUrl] = useState('');
+  const [webhookImageUrl, setWebhookImageUrl] = useState('');
+
+  const [webhookFooterEnabled, setWebhookFooterEnabled] = useState(false);
+  const [webhookFooterText, setWebhookFooterText] = useState('');
+  const [webhookFooterIcon, setWebhookFooterIcon] = useState('');
+
+  const [webhookTimestamp, setWebhookTimestamp] = useState(true);
+  const [webhookEmbedFields, setWebhookEmbedFields] = useState([]);
+  const [webhookButtons, setWebhookButtons] = useState([]);
+
+  // Webhook Templates & Actions
+  const [webhookTemplates, setWebhookTemplates] = useState([]);
+  const [webhookTemplateTitle, setWebhookTemplateTitle] = useState('');
+  const [sendingWebhook, setSendingWebhook] = useState(false);
+  const [savingWebhookTemplate, setSavingWebhookTemplate] = useState(false);
+
+  const fetchWebhookTemplates = async () => {
+    try {
+      const data = await api.getWebhookTemplates(guildId);
+      setWebhookTemplates(data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSendWebhookAnnouncement = async () => {
+    if (!webhookChannelId && !useCustomWebhookUrl) {
+      setErrorMsg('Please select a target channel or enter a custom Webhook URL.');
+      return;
+    }
+    if (useCustomWebhookUrl && !customWebhookUrlInput) {
+      setErrorMsg('Please enter a valid Discord Webhook URL.');
+      return;
+    }
+
+    setSendingWebhook(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    try {
+      const payload = {
+        channelId: useCustomWebhookUrl ? '' : webhookChannelId,
+        customWebhookUrl: useCustomWebhookUrl ? customWebhookUrlInput : '',
+        webhookName: webhookDisplayName,
+        webhookAvatar: webhookDisplayAvatar,
+        content: webhookMessageContent,
+        ping: {
+          type: webhookPingType,
+          roleId: webhookPingRoleId
+        },
+        embed: {
+          enabled: webhookEmbedEnabled,
+          title: webhookEmbedTitle,
+          titleUrl: webhookEmbedTitleUrl,
+          description: webhookEmbedDesc,
+          color: webhookEmbedColor,
+          author: {
+            enabled: webhookAuthorEnabled,
+            name: webhookAuthorName,
+            icon: webhookAuthorIcon,
+            url: webhookAuthorUrl
+          },
+          thumbnail: webhookThumbUrl,
+          image: webhookImageUrl,
+          footer: {
+            enabled: webhookFooterEnabled,
+            text: webhookFooterText,
+            icon: webhookFooterIcon
+          },
+          timestamp: webhookTimestamp,
+          fields: webhookEmbedFields
+        },
+        buttons: webhookButtons
+      };
+
+      const res = await api.sendWebhookAnnouncement(guildId, payload);
+      showNotification(res.message || 'Webhook Announcement sent successfully!');
+    } catch (err) {
+      console.error(err);
+      setErrorMsg(err.message || 'Failed to send Webhook Announcement.');
+    } finally {
+      setSendingWebhook(false);
+    }
+  };
+
+  const handleSaveWebhookTemplate = async () => {
+    if (!webhookTemplateTitle) {
+      setErrorMsg('Please enter a template title to save.');
+      return;
+    }
+
+    setSavingWebhookTemplate(true);
+    try {
+      const templateData = {
+        title: webhookTemplateTitle,
+        webhookName: webhookDisplayName,
+        webhookAvatar: webhookDisplayAvatar,
+        channelId: webhookChannelId,
+        customWebhookUrl: useCustomWebhookUrl ? customWebhookUrlInput : '',
+        content: webhookMessageContent,
+        pingType: webhookPingType,
+        pingRoleId: webhookPingRoleId,
+        embedEnabled: webhookEmbedEnabled,
+        embedTitle: webhookEmbedTitle,
+        embedTitleUrl: webhookEmbedTitleUrl,
+        embedDesc: webhookEmbedDesc,
+        embedColor: webhookEmbedColor,
+        embedAuthorEnabled: webhookAuthorEnabled,
+        embedAuthorName: webhookAuthorName,
+        embedAuthorIcon: webhookAuthorIcon,
+        embedAuthorUrl: webhookAuthorUrl,
+        embedThumb: webhookThumbUrl,
+        embedImage: webhookImageUrl,
+        embedFooterEnabled: webhookFooterEnabled,
+        embedFooterText: webhookFooterText,
+        embedFooterIcon: webhookFooterIcon,
+        embedTimestamp: webhookTimestamp,
+        embedFields: webhookEmbedFields,
+        buttons: webhookButtons
+      };
+
+      const res = await api.saveWebhookTemplate(guildId, templateData);
+      showNotification(res.message || 'Template saved successfully!');
+      setWebhookTemplateTitle('');
+      fetchWebhookTemplates();
+    } catch (err) {
+      console.error(err);
+      setErrorMsg('Failed to save Webhook template.');
+    } finally {
+      setSavingWebhookTemplate(false);
+    }
+  };
+
+  const handleLoadWebhookTemplate = (tpl) => {
+    if (!tpl) return;
+    setWebhookDisplayName(tpl.webhookName || '');
+    setWebhookDisplayAvatar(tpl.webhookAvatar || '');
+    if (tpl.channelId) setWebhookChannelId(tpl.channelId);
+    if (tpl.customWebhookUrl) {
+      setUseCustomWebhookUrl(true);
+      setCustomWebhookUrlInput(tpl.customWebhookUrl);
+    } else {
+      setUseCustomWebhookUrl(false);
+    }
+    setWebhookMessageContent(tpl.content || '');
+    setWebhookPingType(tpl.pingType || 'none');
+    setWebhookPingRoleId(tpl.pingRoleId || '');
+    setWebhookEmbedEnabled(tpl.embedEnabled !== false);
+    setWebhookEmbedTitle(tpl.embedTitle || '');
+    setWebhookEmbedTitleUrl(tpl.embedTitleUrl || '');
+    setWebhookEmbedDesc(tpl.embedDesc || '');
+    setWebhookEmbedColor(tpl.embedColor || '#2563eb');
+    setWebhookAuthorEnabled(!!tpl.embedAuthorEnabled);
+    setWebhookAuthorName(tpl.embedAuthorName || '');
+    setWebhookAuthorIcon(tpl.embedAuthorIcon || '');
+    setWebhookAuthorUrl(tpl.embedAuthorUrl || '');
+    setWebhookThumbUrl(tpl.embedThumb || '');
+    setWebhookImageUrl(tpl.embedImage || '');
+    setWebhookFooterEnabled(!!tpl.embedFooterEnabled);
+    setWebhookFooterText(tpl.embedFooterText || '');
+    setWebhookFooterIcon(tpl.embedFooterIcon || '');
+    setWebhookTimestamp(tpl.embedTimestamp !== false);
+    setWebhookEmbedFields(tpl.embedFields || []);
+    setWebhookButtons(tpl.buttons || []);
+    showNotification(`Loaded template: "${tpl.title}"`);
+  };
+
+  const handleDeleteWebhookTemplate = async (templateId) => {
+    if (!window.confirm('Are you sure you want to delete this template?')) return;
+    try {
+      await api.deleteWebhookTemplate(guildId, templateId);
+      showNotification('Template deleted successfully.');
+      fetchWebhookTemplates();
+    } catch (err) {
+      console.error(err);
+      setErrorMsg('Failed to delete template.');
+    }
+  };
 
 
 
@@ -753,10 +955,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
       const payload = {
         channelId: pubChannelId,
         message: pubMessage,
-        useWebhook: useWebhookMode,
-        webhookUrl: webhookType === 'external' ? webhookUrlInput : '',
-        webhookName,
-        webhookAvatar,
         ping: {
           type: pubPingType,
           roleId: pubPingRoleId
@@ -842,11 +1040,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
       if (type === 'announcement') {
         data = {
           message: pubMessage,
-          useWebhookMode,
-          webhookType,
-          webhookName,
-          webhookAvatar,
-          webhookUrlInput,
           pubPingType,
           pubPingRoleId,
           pubButtons,
@@ -906,11 +1099,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
     const { data } = tpl;
     if (tpl.type === 'announcement') {
       setPubMessage(data.message || '');
-      setUseWebhookMode(!!data.useWebhookMode);
-      setWebhookType(data.webhookType || 'channel');
-      setWebhookName(data.webhookName || 'Server Announcements');
-      setWebhookAvatar(data.webhookAvatar || '');
-      setWebhookUrlInput(data.webhookUrlInput || '');
       setPubPingType(data.pubPingType || 'none');
       setPubPingRoleId(data.pubPingRoleId || '');
       setPubButtons(data.pubButtons || []);
@@ -2172,6 +2360,13 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
     setTimeout(() => setSuccessMsg(null), 4000);
   };
 
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'webhook-announcement') {
+      fetchWebhookTemplates();
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -2328,6 +2523,15 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
             >
               <Megaphone size={16} />
               Publish Embeds
+            </button>
+
+            <button 
+              type="button"
+              onClick={() => handleTabClick('webhook-announcement')} 
+              className={`sidebar-menu-item ${activeTab === 'webhook-announcement' ? 'active' : ''}`}
+            >
+              <Webhook size={16} />
+              Webhook Announcement
             </button>
 
             <button 
@@ -5632,116 +5836,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                       gap: '20px' 
                     }}>
                       
-                      {/* Custom Webhook Sender Settings Panel */}
-                      <div className="glass-panel" style={{ padding: '16px', border: '1px solid var(--border-color)', backgroundColor: 'rgba(0,0,0,0.1)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: useWebhookMode ? '16px' : '0' }}>
-                          <div>
-                            <h4 style={{ fontSize: '0.95rem', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <Webhook size={16} style={{ color: 'var(--secondary)' }} />
-                              Custom Webhook Sender (Custom Name & Avatar)
-                            </h4>
-                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
-                              Publish announcements using a fully customized Webhook identity instead of standard bot identity.
-                            </p>
-                          </div>
-                          <label className="switch">
-                            <input 
-                              type="checkbox" 
-                              checked={useWebhookMode} 
-                              onChange={(e) => setUseWebhookMode(e.target.checked)}
-                            />
-                            <span className="slider"></span>
-                          </label>
-                        </div>
-
-                        {useWebhookMode && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px', padding: '14px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            {/* Webhook Delivery Mode Radio Buttons */}
-                            <div>
-                              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '600' }}>
-                                Webhook Delivery Mode
-                              </label>
-                              <div style={{ display: 'flex', gap: '16px' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                  <input 
-                                    type="radio" 
-                                    name="webhookType" 
-                                    value="channel" 
-                                    checked={webhookType === 'channel'} 
-                                    onChange={() => setWebhookType('channel')} 
-                                  />
-                                  Auto-Channel Webhook (Target Channel)
-                                </label>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                                  <input 
-                                    type="radio" 
-                                    name="webhookType" 
-                                    value="external" 
-                                    checked={webhookType === 'external'} 
-                                    onChange={() => setWebhookType('external')} 
-                                  />
-                                  External Webhook URL
-                                </label>
-                              </div>
-                            </div>
-
-                            {/* External Webhook URL input */}
-                            {webhookType === 'external' && (
-                              <div>
-                                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                  Discord Webhook URL <span style={{ color: 'var(--danger)' }}>*</span>
-                                </label>
-                                <input 
-                                  type="text" 
-                                  value={webhookUrlInput}
-                                  onChange={(e) => setWebhookUrlInput(e.target.value)}
-                                  className="glass-input" 
-                                  placeholder="https://discord.com/api/webhooks/..."
-                                />
-                              </div>
-                            )}
-
-                            {/* Custom Webhook Identity (Name & Avatar) */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                              <div>
-                                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                  Custom Webhook Sender Name
-                                </label>
-                                <input 
-                                  type="text" 
-                                  value={webhookName}
-                                  onChange={(e) => setWebhookName(e.target.value)}
-                                  className="glass-input" 
-                                  placeholder="e.g. Server News / System Admin"
-                                />
-                              </div>
-                              <div>
-                                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                  Custom Webhook Avatar Icon URL
-                                </label>
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                  {webhookAvatar && (
-                                    <img 
-                                      src={webhookAvatar} 
-                                      alt="Avatar Preview" 
-                                      style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)', flexShrink: 0 }}
-                                      onError={(e) => e.target.style.display = 'none'}
-                                    />
-                                  )}
-                                  <input 
-                                    type="text" 
-                                    value={webhookAvatar}
-                                    onChange={(e) => setWebhookAvatar(e.target.value)}
-                                    className="glass-input" 
-                                    placeholder="https://example.com/webhook-avatar.png"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
                       {/* Target Channel & Ping Target Row */}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                         {/* Target Channel Dropdown */}
@@ -6340,7 +6434,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                         Live Discord Preview
                       </span>
                       <DiscordMessagePreview 
-                        botUser={useWebhookMode ? { username: webhookName || 'Custom Webhook', avatar: webhookAvatar } : { username: 'TIMOXITER' }}
+                        botUser={{ username: user?.username }}
                         guildName={guildName}
                         guildIcon={guildIcon}
                         message={pubMessage}
@@ -6368,6 +6462,658 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                         buttons={pubButtons.length > 0 ? pubButtons : (pubButtonEnabled && pubButtonLabel && pubButtonUrl ? [{ label: pubButtonLabel, url: pubButtonUrl }] : [])}
                       />
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: WEBHOOK ANNOUNCEMENT */}
+              {activeTab === 'webhook-announcement' && (
+                <div>
+                  <div style={{ marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px', color: '#ffffff' }}>
+                      <Webhook size={28} style={{ color: 'var(--primary)' }} />
+                      Separate Webhook Announcement
+                    </h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
+                      Publish fully customizable announcements under any custom name and avatar URL across text channels or external Webhooks.
+                    </p>
+                  </div>
+
+                  <div className="preview-layout-container" style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                    
+                    {/* Left Column: Webhook Customizer Controls */}
+                    <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
+                      
+                      {/* Section 1: Webhook & Target Channel Setup */}
+                      <div className="glass-panel" style={{ padding: '20px' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '14px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Radio size={18} style={{ color: 'var(--primary)' }} />
+                          1. Webhook & Target Channel Setup
+                        </h3>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          {/* Delivery Method Toggle */}
+                          <div style={{ display: 'flex', gap: '12px' }}>
+                            <button
+                              type="button"
+                              onClick={() => setUseCustomWebhookUrl(false)}
+                              className={!useCustomWebhookUrl ? 'btn-primary' : 'btn-secondary'}
+                              style={{ flex: 1, padding: '8px', fontSize: '0.85rem', justifyContent: 'center' }}
+                            >
+                              Server Text Channel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setUseCustomWebhookUrl(true)}
+                              className={useCustomWebhookUrl ? 'btn-primary' : 'btn-secondary'}
+                              style={{ flex: 1, padding: '8px', fontSize: '0.85rem', justifyContent: 'center' }}
+                            >
+                              Direct Webhook URL
+                            </button>
+                          </div>
+
+                          {!useCustomWebhookUrl ? (
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '500' }}>
+                                Target Server Channel
+                              </label>
+                              <select
+                                value={webhookChannelId}
+                                onChange={(e) => setWebhookChannelId(e.target.value)}
+                                className="glass-input"
+                              >
+                                <option value="">-- Select Channel --</option>
+                                {channels.map(c => (
+                                  <option key={c.id} value={c.id}>#{c.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : (
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '500' }}>
+                                Custom Discord Webhook URL
+                              </label>
+                              <input
+                                type="text"
+                                value={customWebhookUrlInput}
+                                onChange={(e) => setCustomWebhookUrlInput(e.target.value)}
+                                className="glass-input"
+                                placeholder="https://discord.com/api/webhooks/123456/abcdef..."
+                              />
+                            </div>
+                          )}
+
+                          {/* Custom Webhook Display Name */}
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '500' }}>
+                              Custom Webhook Name
+                            </label>
+                            <input
+                              type="text"
+                              value={webhookDisplayName}
+                              onChange={(e) => setWebhookDisplayName(e.target.value)}
+                              className="glass-input"
+                              placeholder={`e.g. ${guildName} Notifier`}
+                            />
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                              The display username shown above the webhook message in Discord.
+                            </span>
+                          </div>
+
+                          {/* Custom Webhook Avatar URL */}
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '500' }}>
+                              Custom Webhook Avatar URL
+                            </label>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                              <input
+                                type="text"
+                                value={webhookDisplayAvatar}
+                                onChange={(e) => setWebhookDisplayAvatar(e.target.value)}
+                                className="glass-input"
+                                placeholder="https://example.com/avatar.png"
+                                style={{ flex: 1 }}
+                              />
+                              {webhookDisplayAvatar && (
+                                <img
+                                  src={webhookDisplayAvatar}
+                                  alt="Preview"
+                                  style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)' }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 2: Message & Mention Configuration */}
+                      <div className="glass-panel" style={{ padding: '20px' }}>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '14px', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <MessageSquare size={18} style={{ color: 'var(--primary)' }} />
+                          2. Message & Mention Configuration
+                        </h3>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '500' }}>
+                              Mention / Ping Type
+                            </label>
+                            <select
+                              value={webhookPingType}
+                              onChange={(e) => setWebhookPingType(e.target.value)}
+                              className="glass-input"
+                            >
+                              <option value="none">No Mention</option>
+                              <option value="everyone">@everyone</option>
+                              <option value="here">@here</option>
+                              <option value="role">Specific Role...</option>
+                            </select>
+                          </div>
+
+                          {webhookPingType === 'role' && (
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '500' }}>
+                                Select Role to Ping
+                              </label>
+                              <select
+                                value={webhookPingRoleId}
+                                onChange={(e) => setWebhookPingRoleId(e.target.value)}
+                                className="glass-input"
+                              >
+                                <option value="">-- Select Role --</option>
+                                {roles.map(r => (
+                                  <option key={r.id} value={r.id} style={{ color: r.color }}>{r.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '500' }}>
+                              Message Body Content
+                            </label>
+                            <textarea
+                              rows="4"
+                              value={webhookMessageContent}
+                              onChange={(e) => setWebhookMessageContent(e.target.value)}
+                              maxLength={2000}
+                              className="glass-input"
+                              placeholder="Type main announcement text here..."
+                            />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                Placeholders: Use <code>{`{server}`}</code> or <code>{`{username}`}</code>.
+                              </span>
+                              <span style={{ fontSize: '0.75rem', color: webhookMessageContent.length >= 1900 ? 'var(--danger)' : 'var(--text-muted)' }}>
+                                {webhookMessageContent.length} / 2000
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section 3: Embed Customizer */}
+                      <div className="glass-panel" style={{ padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Layers size={18} style={{ color: 'var(--primary)' }} />
+                            3. Rich Discord Embed Builder
+                          </h3>
+                          <label className="switch">
+                            <input
+                              type="checkbox"
+                              checked={webhookEmbedEnabled}
+                              onChange={(e) => setWebhookEmbedEnabled(e.target.checked)}
+                            />
+                            <span className="slider"></span>
+                          </label>
+                        </div>
+
+                        {webhookEmbedEnabled && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                            
+                            {/* Embed Author */}
+                            <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#ffffff' }}>Embed Author Header</span>
+                                <label className="switch" style={{ width: '38px', height: '20px' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={webhookAuthorEnabled}
+                                    onChange={(e) => setWebhookAuthorEnabled(e.target.checked)}
+                                  />
+                                  <span className="slider"></span>
+                                </label>
+                              </div>
+                              {webhookAuthorEnabled && (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                                  <div>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Author Name</label>
+                                    <input
+                                      type="text"
+                                      value={webhookAuthorName}
+                                      onChange={(e) => setWebhookAuthorName(e.target.value)}
+                                      className="glass-input"
+                                      placeholder="Author Name"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Author Icon URL</label>
+                                    <input
+                                      type="text"
+                                      value={webhookAuthorIcon}
+                                      onChange={(e) => setWebhookAuthorIcon(e.target.value)}
+                                      className="glass-input"
+                                      placeholder="https://example.com/icon.png"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Author Link URL</label>
+                                    <input
+                                      type="text"
+                                      value={webhookAuthorUrl}
+                                      onChange={(e) => setWebhookAuthorUrl(e.target.value)}
+                                      className="glass-input"
+                                      placeholder="https://example.com"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Title & Color */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Embed Title</label>
+                                <input
+                                  type="text"
+                                  value={webhookEmbedTitle}
+                                  onChange={(e) => setWebhookEmbedTitle(e.target.value)}
+                                  className="glass-input"
+                                  placeholder="Embed Header Title"
+                                />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Title Link URL</label>
+                                <input
+                                  type="text"
+                                  value={webhookEmbedTitleUrl}
+                                  onChange={(e) => setWebhookEmbedTitleUrl(e.target.value)}
+                                  className="glass-input"
+                                  placeholder="https://example.com"
+                                />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Sidebar Accent Color</label>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                  <input
+                                    type="color"
+                                    value={webhookEmbedColor}
+                                    onChange={(e) => setWebhookEmbedColor(e.target.value)}
+                                    style={{ width: '40px', height: '38px', padding: 0, border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', background: 'none' }}
+                                  />
+                                  <input
+                                    type="text"
+                                    value={webhookEmbedColor}
+                                    onChange={(e) => setWebhookEmbedColor(e.target.value)}
+                                    className="glass-input"
+                                    placeholder="#2563eb"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Embed Description */}
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Embed Description</label>
+                              <textarea
+                                rows="3"
+                                value={webhookEmbedDesc}
+                                onChange={(e) => setWebhookEmbedDesc(e.target.value)}
+                                maxLength={4000}
+                                className="glass-input"
+                                placeholder="Rich multi-line description..."
+                              />
+                            </div>
+
+                            {/* Media URLs */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Thumbnail URL (Small Right)</label>
+                                <input
+                                  type="text"
+                                  value={webhookThumbUrl}
+                                  onChange={(e) => setWebhookThumbUrl(e.target.value)}
+                                  className="glass-input"
+                                  placeholder="https://example.com/thumb.png"
+                                />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Large Image URL (Banner)</label>
+                                <input
+                                  type="text"
+                                  value={webhookImageUrl}
+                                  onChange={(e) => setWebhookImageUrl(e.target.value)}
+                                  className="glass-input"
+                                  placeholder="https://example.com/banner.png"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Dynamic Embed Fields */}
+                            <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#ffffff' }}>Embed Fields ({webhookEmbedFields.length}/5)</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (webhookEmbedFields.length < 5) {
+                                      setWebhookEmbedFields([...webhookEmbedFields, { name: '', value: '', inline: true }]);
+                                    }
+                                  }}
+                                  disabled={webhookEmbedFields.length >= 5}
+                                  className="btn-success"
+                                  style={{ padding: '4px 10px', fontSize: '0.8rem' }}
+                                >
+                                  + Add Field
+                                </button>
+                              </div>
+                              {webhookEmbedFields.map((fld, idx) => (
+                                <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px', padding: '10px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '6px' }}>
+                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <input
+                                      type="text"
+                                      value={fld.name}
+                                      onChange={(e) => {
+                                        const updated = [...webhookEmbedFields];
+                                        updated[idx].name = e.target.value;
+                                        setWebhookEmbedFields(updated);
+                                      }}
+                                      className="glass-input"
+                                      placeholder="Field Title"
+                                      style={{ flex: 1 }}
+                                    />
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                                      <input
+                                        type="checkbox"
+                                        checked={fld.inline}
+                                        onChange={(e) => {
+                                          const updated = [...webhookEmbedFields];
+                                          updated[idx].inline = e.target.checked;
+                                          setWebhookEmbedFields(updated);
+                                        }}
+                                      />
+                                      Inline
+                                    </label>
+                                    <button
+                                      type="button"
+                                      onClick={() => setWebhookEmbedFields(webhookEmbedFields.filter((_, i) => i !== idx))}
+                                      className="btn-danger"
+                                      style={{ padding: '6px' }}
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                  <textarea
+                                    rows="2"
+                                    value={fld.value}
+                                    onChange={(e) => {
+                                      const updated = [...webhookEmbedFields];
+                                      updated[idx].value = e.target.value;
+                                      setWebhookEmbedFields(updated);
+                                    }}
+                                    className="glass-input"
+                                    placeholder="Field Content"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Footer Customization */}
+                            <div style={{ padding: '12px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#ffffff' }}>Embed Footer & Timestamp</span>
+                                <label className="switch" style={{ width: '38px', height: '20px' }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={webhookFooterEnabled}
+                                    onChange={(e) => setWebhookFooterEnabled(e.target.checked)}
+                                  />
+                                  <span className="slider"></span>
+                                </label>
+                              </div>
+                              {webhookFooterEnabled && (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                                  <div>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Footer Text</label>
+                                    <input
+                                      type="text"
+                                      value={webhookFooterText}
+                                      onChange={(e) => setWebhookFooterText(e.target.value)}
+                                      className="glass-input"
+                                      placeholder="Footer Text"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Footer Icon URL</label>
+                                    <input
+                                      type="text"
+                                      value={webhookFooterIcon}
+                                      onChange={(e) => setWebhookFooterIcon(e.target.value)}
+                                      className="glass-input"
+                                      placeholder="https://example.com/footer-icon.png"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+                                <input
+                                  type="checkbox"
+                                  id="webhookTimestampCheck"
+                                  checked={webhookTimestamp}
+                                  onChange={(e) => setWebhookTimestamp(e.target.checked)}
+                                />
+                                <label htmlFor="webhookTimestampCheck" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                                  Show Current Timestamp on Embed
+                                </label>
+                              </div>
+                            </div>
+
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Section 4: Action Link Buttons */}
+                      <div className="glass-panel" style={{ padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                          <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#ffffff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Link size={18} style={{ color: 'var(--primary)' }} />
+                            4. Action Row Link Buttons ({webhookButtons.length}/5)
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (webhookButtons.length < 5) {
+                                setWebhookButtons([...webhookButtons, { label: '', url: '' }]);
+                              }
+                            }}
+                            disabled={webhookButtons.length >= 5}
+                            className="btn-success"
+                            style={{ padding: '4px 10px', fontSize: '0.8rem' }}
+                          >
+                            + Add Button
+                          </button>
+                        </div>
+
+                        {webhookButtons.length > 0 && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {webhookButtons.map((btn, idx) => (
+                              <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '6px' }}>
+                                <input
+                                  type="text"
+                                  value={btn.label}
+                                  onChange={(e) => {
+                                    const updated = [...webhookButtons];
+                                    updated[idx].label = e.target.value;
+                                    setWebhookButtons(updated);
+                                  }}
+                                  className="glass-input"
+                                  placeholder="Button Label (e.g. Website)"
+                                  style={{ flex: 1 }}
+                                />
+                                <input
+                                  type="text"
+                                  value={btn.url}
+                                  onChange={(e) => {
+                                    const updated = [...webhookButtons];
+                                    updated[idx].url = e.target.value;
+                                    setWebhookButtons(updated);
+                                  }}
+                                  className="glass-input"
+                                  placeholder="https://website.com"
+                                  style={{ flex: 1.5 }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setWebhookButtons(webhookButtons.filter((_, i) => i !== idx))}
+                                  className="btn-danger"
+                                  style={{ padding: '6px 10px' }}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Section 5: Actions Bar & Templates */}
+                      <div className="glass-panel" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            onClick={handleSendWebhookAnnouncement}
+                            disabled={sendingWebhook}
+                            className="btn-primary"
+                            style={{ flex: 1, padding: '12px', justifyContent: 'center', fontSize: '0.95rem' }}
+                          >
+                            <Send size={18} />
+                            {sendingWebhook ? 'Posting Webhook Announcement...' : 'Send Webhook Announcement Now'}
+                          </button>
+                        </div>
+
+                        {/* Save Template controls */}
+                        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            value={webhookTemplateTitle}
+                            onChange={(e) => setWebhookTemplateTitle(e.target.value)}
+                            className="glass-input"
+                            placeholder="Save as Template Name (e.g. Weekly News)..."
+                            style={{ flex: 1 }}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleSaveWebhookTemplate}
+                            disabled={savingWebhookTemplate}
+                            className="btn-secondary"
+                            style={{ padding: '9px 16px', fontSize: '0.85rem' }}
+                          >
+                            <Save size={16} />
+                            Save Template
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Section 6: Saved Templates List */}
+                      {webhookTemplates.length > 0 && (
+                        <div className="glass-panel" style={{ padding: '20px' }}>
+                          <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#ffffff', marginBottom: '12px' }}>
+                            Saved Webhook Announcement Templates
+                          </h3>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                            {webhookTemplates.map(tpl => (
+                              <div
+                                key={tpl._id}
+                                className="glass-panel"
+                                style={{ padding: '14px', backgroundColor: 'rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', gap: '8px' }}
+                              >
+                                <div style={{ fontWeight: '700', fontSize: '0.95rem', color: '#ffffff' }}>
+                                  {tpl.title}
+                                </div>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                                  Name: {tpl.webhookName || 'Default'}
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleLoadWebhookTemplate(tpl)}
+                                    className="btn-secondary"
+                                    style={{ flex: 1, padding: '4px 8px', fontSize: '0.78rem', justifyContent: 'center' }}
+                                  >
+                                    Load
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteWebhookTemplate(tpl._id)}
+                                    className="btn-danger"
+                                    style={{ padding: '4px 8px', fontSize: '0.78rem' }}
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+
+                    {/* Right Column: Real-Time Interactive Discord Preview */}
+                    <div style={{
+                      flex: '1 0 350px',
+                      maxWidth: '520px',
+                      position: 'sticky',
+                      top: '24px',
+                      zIndex: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                        <Eye size={14} />
+                        Live Discord Webhook Preview
+                      </span>
+                      <DiscordMessagePreview
+                        botUser={{ username: user?.username }}
+                        guildName={guildName}
+                        guildIcon={guildIcon}
+                        message={webhookMessageContent}
+                        customWebhookName={webhookDisplayName}
+                        customWebhookAvatar={webhookDisplayAvatar}
+                        embedEnabled={webhookEmbedEnabled}
+                        embedTitle={webhookEmbedTitle}
+                        embedDesc={webhookEmbedDesc}
+                        embedColor={webhookEmbedColor}
+                        embedThumb={webhookThumbUrl}
+                        embedImage={webhookImageUrl}
+                        isDM={false}
+                        pingType={webhookPingType}
+                        pingRoleId={webhookPingRoleId}
+                        roles={roles}
+                        embedAuthorEnabled={webhookAuthorEnabled}
+                        embedAuthorName={webhookAuthorName}
+                        embedAuthorIcon={webhookAuthorIcon}
+                        embedAuthorUrl={webhookAuthorUrl}
+                        embedFooterEnabled={webhookFooterEnabled}
+                        embedFooterText={webhookFooterText}
+                        embedFooterIcon={webhookFooterIcon}
+                        embedFields={webhookEmbedFields}
+                        buttons={webhookButtons}
+                      />
+                    </div>
+
                   </div>
                 </div>
               )}
