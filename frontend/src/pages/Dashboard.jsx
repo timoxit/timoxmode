@@ -1868,6 +1868,9 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
       return;
     }
     setActiveTab(newTab);
+    if (newTab === 'webhook-announcement') {
+      fetchWebhookTemplates();
+    }
   };
 
   const handleBackClick = () => {
@@ -2358,13 +2361,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
   const showNotification = (msg) => {
     setSuccessMsg(msg);
     setTimeout(() => setSuccessMsg(null), 4000);
-  };
-
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-    if (tab === 'webhook-announcement') {
-      fetchWebhookTemplates();
-    }
   };
 
   if (loading) {
