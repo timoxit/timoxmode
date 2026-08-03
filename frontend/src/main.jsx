@@ -5,7 +5,7 @@ import App from './App.jsx'
 
 // Function to handle automatic site closure when DevTools are opened
 const closeWebsiteOnDevTools = () => {
-  document.body.innerHTML = '<div style="background:#090d16;color:#ef4444;height:100vh;display:flex;justify-content:center;align-items:center;font-family:sans-serif;font-weight:600;font-size:1.2rem;">Access Denied: Developer Tools are restricted.</div>';
+  document.documentElement.innerHTML = '<div style="background:#090d16;color:#ef4444;height:100vh;display:flex;justify-content:center;align-items:center;font-family:sans-serif;font-weight:700;font-size:1.5rem;">Access Denied: Developer Tools are restricted.</div>';
   window.location.href = 'about:blank';
   try {
     window.close();
@@ -14,8 +14,8 @@ const closeWebsiteOnDevTools = () => {
   }
 };
 
-// 1. Check window outer/inner dimension differences (detects docked DevTools in Chrome, Firefox, Edge, Safari)
-const threshold = 160;
+// 1. Check window outer/inner dimension differences (detects docked DevTools in all browsers)
+const threshold = 100;
 const checkWindowDimensions = () => {
   const widthDiff = window.outerWidth - window.innerWidth > threshold;
   const heightDiff = window.outerHeight - window.innerHeight > threshold;
@@ -27,32 +27,31 @@ const checkWindowDimensions = () => {
 // 2. Debugger timing analysis (detects floating or separate window DevTools)
 const checkDebuggerTiming = () => {
   const start = performance.now();
-  // eslint-disable-next-line no-debugger
-  debugger;
+  (function() { return false; })["constructor"]("debugger")();
   if (performance.now() - start > 100) {
     closeWebsiteOnDevTools();
   }
 };
 
-// 3. Console element getter trick (detects console tab inspection)
+// 3. RegExp toString getter trick (detects Sources, Console, Network inspector tabs)
 const checkConsoleInspection = () => {
-  const element = new Image();
-  Object.defineProperty(element, 'id', {
-    get: function () {
-      closeWebsiteOnDevTools();
-    }
-  });
-  console.log('%c', element);
+  const reg = /./;
+  reg.toString = function() {
+    closeWebsiteOnDevTools();
+    return '';
+  };
+  console.log(reg);
 };
 
-// Periodically run DevTools detection checks
+// High-frequency DevTools polling check (every 100ms)
 setInterval(() => {
   checkWindowDimensions();
   checkDebuggerTiming();
   checkConsoleInspection();
-}, 500);
+}, 100);
 
 window.addEventListener('resize', checkWindowDimensions);
+window.addEventListener('load', checkWindowDimensions);
 
 // Disable context menu (right-click Inspect)
 document.addEventListener('contextmenu', (e) => {
@@ -67,7 +66,7 @@ document.addEventListener('keydown', (e) => {
     closeWebsiteOnDevTools();
   }
   
-  // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+Shift+K
+  // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+Shift+K, Ctrl+Shift+E
   if (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c', 'K', 'k', 'E', 'e'].includes(e.key)) {
     e.preventDefault();
     closeWebsiteOnDevTools();
@@ -91,4 +90,5 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
+
 
