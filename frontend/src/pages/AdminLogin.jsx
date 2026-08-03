@@ -39,34 +39,9 @@ export default function AdminLogin({ onBack, onLoginSuccess }) {
       justifyContent: 'center',
       alignItems: 'center',
       padding: '20px',
-      position: 'relative',
-      overflow: 'hidden'
+      backgroundColor: 'var(--bg-primary)'
     }}>
-      {/* Background glow effects */}
-      <div style={{
-        position: 'absolute',
-        top: '20%',
-        left: '30%',
-        width: '400px',
-        height: '400px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        zIndex: -1
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '20%',
-        right: '30%',
-        width: '400px',
-        height: '400px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        zIndex: -1
-      }} />
-
-      <div className="container" style={{ maxWidth: '440px', width: '100%', zIndex: 2 }}>
+      <div className="container" style={{ maxWidth: '420px', width: '100%' }}>
         
         {/* Back Button */}
         <button 
