@@ -121,13 +121,13 @@ function BotTerminal({ onAdminLogin }) {
 
   return (
     <div className="glass-panel" style={{
-      fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+      fontFamily: '"JetBrains Mono", Consolas, Monaco, monospace',
       fontSize: '0.85rem',
-      backgroundColor: 'rgba(5, 5, 15, 0.85)',
-      borderRadius: '12px',
+      backgroundColor: '#070a12',
+      borderRadius: '8px',
       overflow: 'hidden',
-      border: '1px solid rgba(99, 102, 241, 0.2)',
-      boxShadow: '0 12px 40px rgba(0,0,0,0.7)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
       textAlign: 'left'
     }}>
       {/* Header bar */}
@@ -135,14 +135,14 @@ function BotTerminal({ onAdminLogin }) {
         display: 'flex',
         alignItems: 'center',
         padding: '10px 14px',
-        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        backgroundColor: '#0d121f',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
         justifyContent: 'space-between'
       }}>
         <div style={{ display: 'flex', gap: '6px' }}>
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ff5f56', display: 'inline-block' }} />
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ffbd2e', display: 'inline-block' }} />
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#27c93f', display: 'inline-block' }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', display: 'inline-block' }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'inline-block' }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }} />
         </div>
         <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: '600' }}>timoxiter@bot-status: ~</span>
         <div style={{ width: '30px' }} />
@@ -191,7 +191,7 @@ function BotTerminal({ onAdminLogin }) {
               border: 'none',
               outline: 'none',
               color: '#dbdee1',
-              fontFamily: 'Consolas, Monaco, "Andale Mono", monospace',
+              fontFamily: '"JetBrains Mono", Consolas, Monaco, monospace',
               fontSize: '0.85rem',
               padding: 0
             }}
@@ -242,29 +242,15 @@ export default function LandingPage({ onAdminLogin }) {
         flexDirection: 'column',
         alignItems: 'center'
       }}>
-        
-        <div style={{
-          position: 'absolute',
-          top: '5%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '300px',
-          height: '300px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, var(--primary-glow) 0%, transparent 70%)',
-          filter: 'blur(50px)',
-          zIndex: -1
-        }} />
 
         <div className="hero-layout">
           {/* Left Column: Title & CTA */}
           <div className="hero-left">
             <h1 style={{
               fontSize: 'clamp(3rem, 5.5vw, 4.5rem)',
-              fontWeight: '900',
-              background: 'linear-gradient(135deg, #ffffff 0%, var(--primary) 50%, var(--secondary) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              fontWeight: '800',
+              color: '#ffffff',
+              letterSpacing: '-0.03em',
               lineHeight: '1.1',
               marginBottom: '14px'
             }}>
@@ -285,11 +271,11 @@ export default function LandingPage({ onAdminLogin }) {
               <div className="glass-panel" style={{
                 padding: '10px',
                 borderColor: 'var(--danger)',
-                backgroundColor: 'rgba(244, 63, 94, 0.05)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
                 color: 'var(--danger)',
                 width: '100%',
                 marginBottom: '16px',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 fontSize: '0.85rem'
               }}>
                 {error}
@@ -301,7 +287,7 @@ export default function LandingPage({ onAdminLogin }) {
                 onClick={handleLogin} 
                 disabled={loading}
                 className="btn-primary" 
-                style={{ fontSize: '1rem', height: '48px', padding: '0 28px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1' }}
+                style={{ fontSize: '0.95rem', height: '44px', padding: '0 24px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', lineHeight: '1' }}
               >
                 {loading ? 'Connecting...' : 'Connect Discord Account'}
                 <ArrowRight size={18} />
@@ -313,27 +299,19 @@ export default function LandingPage({ onAdminLogin }) {
                 rel="noopener noreferrer" 
                 className="btn-secondary" 
                 style={{ 
-                  fontSize: '1rem', 
-                  height: '48px',
-                  padding: '0 28px', 
-                  borderRadius: '10px', 
+                  fontSize: '0.95rem', 
+                  height: '44px',
+                  padding: '0 24px', 
+                  borderRadius: '6px', 
                   display: 'inline-flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
                   gap: '8px',
                   lineHeight: '1',
                   textDecoration: 'none',
-                  borderColor: 'rgba(88, 101, 242, 0.4)',
+                  borderColor: 'rgba(255, 255, 255, 0.12)',
                   color: 'white',
-                  background: 'rgba(88, 101, 242, 0.15)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(88, 101, 242, 0.3)';
-                  e.currentTarget.style.borderColor = 'rgba(88, 101, 242, 0.6)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(88, 101, 242, 0.15)';
-                  e.currentTarget.style.borderColor = 'rgba(88, 101, 242, 0.4)';
+                  background: 'rgba(255, 255, 255, 0.05)'
                 }}
               >
                 <svg width="18" height="18" viewBox="0 0 127.14 96.36" fill="currentColor">

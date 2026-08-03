@@ -80,18 +80,11 @@ export default function GuildSelector({ user, onSelectGuild, onLogout }) {
                 fontSize: '0.85rem', 
                 backgroundColor: '#5865F2', 
                 backgroundImage: 'none',
-                boxShadow: '0 4px 10px rgba(88, 101, 242, 0.2)',
-                borderRadius: '8px',
+                borderRadius: '6px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
                 textDecoration: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#4752c4';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#5865F2';
               }}
             >
               <svg width="16" height="16" viewBox="0 0 127.14 96.36" fill="currentColor">
@@ -121,7 +114,7 @@ export default function GuildSelector({ user, onSelectGuild, onLogout }) {
                 <img 
                   src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`} 
                   alt={user.username}
-                  style={{ width: '70px', height: '70px', borderRadius: '50%', border: '2px solid var(--primary)', boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)' }}
+                  style={{ width: '70px', height: '70px', borderRadius: '50%', border: '2px solid var(--primary)' }}
                 />
               ) : (
                 <div style={{
@@ -133,8 +126,7 @@ export default function GuildSelector({ user, onSelectGuild, onLogout }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '1.5rem',
-                  fontWeight: '600',
-                  boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)'
+                  fontWeight: '600'
                 }}>
                   {user.username.substring(0, 2).toUpperCase()}
                 </div>

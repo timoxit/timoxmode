@@ -177,14 +177,14 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
           position: 'relative',
           overflow: 'hidden'
         }}>
-          {/* Top subtle glow line */}
+          {/* Top border line */}
           <div style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             height: '2px',
-            background: 'linear-gradient(90deg, var(--primary) 0%, var(--accent) 50%, var(--secondary) 100%)'
+            background: 'var(--primary)'
           }} />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -200,13 +200,12 @@ export default function AdminSelector({ user, onSelectGuild, onLogout }) {
                   width: '42px',
                   height: '42px',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
+                  backgroundColor: 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 'bold',
-                  color: 'white',
-                  boxShadow: '0 4px 10px rgba(99, 102, 241, 0.25)'
+                  color: 'white'
                 }}>
                   {user.username ? user.username[0].toUpperCase() : 'A'}
                 </div>

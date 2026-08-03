@@ -42,30 +42,6 @@ export default function AdminLogin({ onBack, onLoginSuccess }) {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Background glow effects */}
-      <div style={{
-        position: 'absolute',
-        top: '20%',
-        left: '30%',
-        width: '400px',
-        height: '400px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        zIndex: -1
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '20%',
-        right: '30%',
-        width: '400px',
-        height: '400px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        zIndex: -1
-      }} />
-
       <div className="container" style={{ maxWidth: '440px', width: '100%', zIndex: 2 }}>
         
         {/* Back Button */}
@@ -76,9 +52,7 @@ export default function AdminLogin({ onBack, onLoginSuccess }) {
             alignSelf: 'flex-start', 
             marginBottom: '24px', 
             padding: '8px 16px', 
-            fontSize: '0.85rem',
-            border: 'none',
-            background: 'rgba(255,255,255,0.02)'
+            fontSize: '0.85rem'
           }}
         >
           <ArrowLeft size={16} />
@@ -94,19 +68,18 @@ export default function AdminLogin({ onBack, onLoginSuccess }) {
           
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '16px',
-              backgroundColor: 'rgba(99, 102, 241, 0.1)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
+              width: '56px',
+              height: '56px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(37, 99, 235, 0.1)',
+              border: '1px solid rgba(37, 99, 235, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'var(--primary)',
-              margin: '0 auto 16px auto',
-              boxShadow: '0 0 15px rgba(99, 102, 241, 0.2)'
+              margin: '0 auto 16px auto'
             }}>
-              <Shield size={32} />
+              <Shield size={28} />
             </div>
             <h2 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '8px', letterSpacing: '-0.02em' }}>Admin Portal</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Enter credentials to configure connected servers.</p>
