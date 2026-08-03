@@ -28,7 +28,8 @@ import {
   Home,
   LogOut,
   RotateCw,
-  Mic
+  Mic,
+  Webhook
 } from 'lucide-react';
 
 const Youtube = ({ size = 24, className = '', style = {} }) => (
@@ -482,6 +483,13 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
   const [pubEmbedImage, setPubEmbedImage] = useState('');
   const [publishing, setPublishing] = useState(false);
 
+  // Webhook Announcement Customization States
+  const [useWebhookMode, setUseWebhookMode] = useState(false);
+  const [webhookType, setWebhookType] = useState('channel'); // 'channel' | 'external'
+  const [webhookName, setWebhookName] = useState('Server Announcements');
+  const [webhookAvatar, setWebhookAvatar] = useState('');
+  const [webhookUrlInput, setWebhookUrlInput] = useState('');
+
   const [resolvingChannel, setResolvingChannel] = useState(false);
   const [resolveSuccessMsg, setResolveSuccessMsg] = useState('');
 
@@ -745,6 +753,10 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
       const payload = {
         channelId: pubChannelId,
         message: pubMessage,
+        useWebhook: useWebhookMode,
+        webhookUrl: webhookType === 'external' ? webhookUrlInput : '',
+        webhookName,
+        webhookAvatar,
         ping: {
           type: pubPingType,
           roleId: pubPingRoleId
@@ -830,6 +842,11 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
       if (type === 'announcement') {
         data = {
           message: pubMessage,
+          useWebhookMode,
+          webhookType,
+          webhookName,
+          webhookAvatar,
+          webhookUrlInput,
           pubPingType,
           pubPingRoleId,
           pubButtons,
@@ -889,6 +906,11 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
     const { data } = tpl;
     if (tpl.type === 'announcement') {
       setPubMessage(data.message || '');
+      setUseWebhookMode(!!data.useWebhookMode);
+      setWebhookType(data.webhookType || 'channel');
+      setWebhookName(data.webhookName || 'Server Announcements');
+      setWebhookAvatar(data.webhookAvatar || '');
+      setWebhookUrlInput(data.webhookUrlInput || '');
       setPubPingType(data.pubPingType || 'none');
       setPubPingRoleId(data.pubPingRoleId || '');
       setPubButtons(data.pubButtons || []);
@@ -5610,6 +5632,116 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                       gap: '20px' 
                     }}>
                       
+                      {/* Custom Webhook Sender Settings Panel */}
+                      <div className="glass-panel" style={{ padding: '16px', border: '1px solid var(--border-color)', backgroundColor: 'rgba(0,0,0,0.1)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: useWebhookMode ? '16px' : '0' }}>
+                          <div>
+                            <h4 style={{ fontSize: '0.95rem', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <Webhook size={16} style={{ color: 'var(--secondary)' }} />
+                              Custom Webhook Sender (Custom Name & Avatar)
+                            </h4>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                              Publish announcements using a fully customized Webhook identity instead of standard bot identity.
+                            </p>
+                          </div>
+                          <label className="switch">
+                            <input 
+                              type="checkbox" 
+                              checked={useWebhookMode} 
+                              onChange={(e) => setUseWebhookMode(e.target.checked)}
+                            />
+                            <span className="slider"></span>
+                          </label>
+                        </div>
+
+                        {useWebhookMode && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px', padding: '14px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            {/* Webhook Delivery Mode Radio Buttons */}
+                            <div>
+                              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: '600' }}>
+                                Webhook Delivery Mode
+                              </label>
+                              <div style={{ display: 'flex', gap: '16px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                  <input 
+                                    type="radio" 
+                                    name="webhookType" 
+                                    value="channel" 
+                                    checked={webhookType === 'channel'} 
+                                    onChange={() => setWebhookType('channel')} 
+                                  />
+                                  Auto-Channel Webhook (Target Channel)
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
+                                  <input 
+                                    type="radio" 
+                                    name="webhookType" 
+                                    value="external" 
+                                    checked={webhookType === 'external'} 
+                                    onChange={() => setWebhookType('external')} 
+                                  />
+                                  External Webhook URL
+                                </label>
+                              </div>
+                            </div>
+
+                            {/* External Webhook URL input */}
+                            {webhookType === 'external' && (
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                  Discord Webhook URL <span style={{ color: 'var(--danger)' }}>*</span>
+                                </label>
+                                <input 
+                                  type="text" 
+                                  value={webhookUrlInput}
+                                  onChange={(e) => setWebhookUrlInput(e.target.value)}
+                                  className="glass-input" 
+                                  placeholder="https://discord.com/api/webhooks/..."
+                                />
+                              </div>
+                            )}
+
+                            {/* Custom Webhook Identity (Name & Avatar) */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                  Custom Webhook Sender Name
+                                </label>
+                                <input 
+                                  type="text" 
+                                  value={webhookName}
+                                  onChange={(e) => setWebhookName(e.target.value)}
+                                  className="glass-input" 
+                                  placeholder="e.g. Server News / System Admin"
+                                />
+                              </div>
+                              <div>
+                                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                  Custom Webhook Avatar Icon URL
+                                </label>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                  {webhookAvatar && (
+                                    <img 
+                                      src={webhookAvatar} 
+                                      alt="Avatar Preview" 
+                                      style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)', flexShrink: 0 }}
+                                      onError={(e) => e.target.style.display = 'none'}
+                                    />
+                                  )}
+                                  <input 
+                                    type="text" 
+                                    value={webhookAvatar}
+                                    onChange={(e) => setWebhookAvatar(e.target.value)}
+                                    className="glass-input" 
+                                    placeholder="https://example.com/webhook-avatar.png"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       {/* Target Channel & Ping Target Row */}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                         {/* Target Channel Dropdown */}
@@ -6208,7 +6340,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                         Live Discord Preview
                       </span>
                       <DiscordMessagePreview 
-                        botUser={{ username: user?.username }}
+                        botUser={useWebhookMode ? { username: webhookName || 'Custom Webhook', avatar: webhookAvatar } : { username: 'TIMOXITER' }}
                         guildName={guildName}
                         guildIcon={guildIcon}
                         message={pubMessage}
