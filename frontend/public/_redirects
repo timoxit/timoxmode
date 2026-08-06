@@ -1,3 +1,3 @@
-/uploads/*  http://3.79.247.25:26689/uploads/:splat  200
-/api/*      http://3.79.247.25:26669/api/:splat      200
+/uploads/*  http://15.165.39.211:25569/uploads/:splat  200
+/api/*      http://15.165.39.211:25569/api/:splat      200
 /*          /index.html                                      200
