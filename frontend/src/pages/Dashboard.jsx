@@ -34,7 +34,9 @@ import {
   Radio,
   Layers,
   Copy,
-  PlusCircle
+  PlusCircle,
+  Filter,
+  X
 } from 'lucide-react';
 
 const Youtube = ({ size = 24, className = '', style = {} }) => (
@@ -426,6 +428,14 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
   const [logs, setLogs] = useState([]);
   const [uploadFile, setUploadFile] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
+
+  // Word Filter State
+  const [wordFilterLogs, setWordFilterLogs] = useState([]);
+  const [wordFilterNewWord, setWordFilterNewWord] = useState('');
+  const [wordFilterNewCategory, setWordFilterNewCategory] = useState('custom');
+  const [wordFilterBulkInput, setWordFilterBulkInput] = useState('');
+  const [showWordFilterBulk, setShowWordFilterBulk] = useState(false);
+  const [wordFilterLogsLoading, setWordFilterLogsLoading] = useState(false);
 
   // Custom Mass-DM Broadcast State
   const [broadcastMessage, setBroadcastMessage] = useState('');
@@ -1385,8 +1395,16 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
             spam: { enabled: false, protectedChannels: [], maxMessages: 5, timeWindow: 5000, timeoutDuration: 5 },
             links: { enabled: false, protectedChannels: [], allowedLinks: [] },
             photoSpam: { enabled: false, maxPhotos: 3, timeWindow: 10000, timeoutDuration: 10, whitelistedChannels: [] },
-            whitelistedUsers: []
+            whitelistedUsers: [],
+            wordFilter: { enabled: false, blockedWords: [], deleteMessage: true, caseSensitive: false, detectBypass: true, warnBeforePunishment: true, maxViolations: 3, violationWindow: 300000, timeoutDuration: 10, logChannelId: '', exemptRoles: [], exemptChannels: [], exemptUsers: [] }
           };
+        }
+        // Ensure wordFilter defaults exist
+        if (!sData.moderation.wordFilter) {
+          sData.moderation.wordFilter = { enabled: false, blockedWords: [], deleteMessage: true, caseSensitive: false, detectBypass: true, warnBeforePunishment: true, maxViolations: 3, violationWindow: 300000, timeoutDuration: 10, logChannelId: '', exemptRoles: [], exemptChannels: [], exemptUsers: [] };
+        }
+        if (!sData.moderation.wordFilter.blockedWords) {
+          sData.moderation.wordFilter.blockedWords = [];
         }
       }
 
@@ -1583,15 +1601,19 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
   // Load moderation logs when active tab is logs
   useEffect(() => {
     if (activeTab === 'logs') {
-      const fetchLogs = async () => {
-        try {
-          const res = await api.getLogs(guildId);
-          setLogs(res);
-        } catch (err) {
-          console.error('[Dashboard] Failed to fetch moderation logs:', err.message);
-        }
-      };
-      fetchLogs();
+      api.getLogs(guildId).then(data => {
+        setLogs(data);
+      }).catch(err => {
+        console.error('Failed to fetch moderation logs:', err.message);
+      });
+    }
+    if (activeTab === 'word-filter') {
+      setWordFilterLogsLoading(true);
+      api.getWordFilterLogs(guildId).then(data => {
+        setWordFilterLogs(data || []);
+      }).catch(err => {
+        console.error('Failed to fetch word filter logs:', err.message);
+      }).finally(() => setWordFilterLogsLoading(false));
     }
   }, [activeTab, guildId]);
 
@@ -1802,6 +1824,8 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
         return s.antinuke;
       case 'moderation':
         return s.moderation;
+      case 'word-filter':
+        return s.moderation?.wordFilter;
       case 'welcome':
         return s.welcome;
       case 'verification':
@@ -2271,6 +2295,18 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
           spam.timeoutDuration = 5;
         }
       }
+      if (s.moderation.wordFilter) {
+        const wf = s.moderation.wordFilter;
+        if (wf.maxViolations === '' || wf.maxViolations === null || wf.maxViolations === undefined || isNaN(wf.maxViolations)) {
+          wf.maxViolations = 3;
+        }
+        if (wf.violationWindow === '' || wf.violationWindow === null || wf.violationWindow === undefined || isNaN(wf.violationWindow)) {
+          wf.violationWindow = 300000;
+        }
+        if (wf.timeoutDuration === '' || wf.timeoutDuration === null || wf.timeoutDuration === undefined || isNaN(wf.timeoutDuration)) {
+          wf.timeoutDuration = 10;
+        }
+      }
     }
     if (s.antinuke) {
       const an = s.antinuke;
@@ -2460,6 +2496,15 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
             >
               <Shield size={16} />
               Moderation
+            </button>
+
+            <button 
+              type="button"
+              onClick={() => handleTabClick('word-filter')} 
+              className={`sidebar-menu-item ${activeTab === 'word-filter' ? 'active' : ''}`}
+            >
+              <Filter size={16} />
+              Word Filter
             </button>
 
             <button 
@@ -3074,6 +3119,520 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                       )}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* TAB: WORD FILTER */}
+              {activeTab === 'word-filter' && settings && settings.moderation?.wordFilter && (
+                <div>
+
+                  {/* Section A: Main Toggle & Config */}
+                  <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: '700' }}>Word Protection System</h3>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Automatically detect and delete messages containing blocked words or phrases. Repeated violations trigger auto-timeout.</p>
+                      </div>
+                      <label className="switch">
+                        <input 
+                          type="checkbox" 
+                          checked={settings.moderation.wordFilter.enabled} 
+                          onChange={() => handleToggle('moderation.wordFilter.enabled')}
+                        />
+                        <span className="slider"></span>
+                      </label>
+                    </div>
+
+                    {settings.moderation.wordFilter.enabled && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={settings.moderation.wordFilter.deleteMessage !== false} 
+                              onChange={() => handleToggle('moderation.wordFilter.deleteMessage')}
+                            />
+                            <div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Delete Messages</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Auto-delete messages that match blocked words</div>
+                            </div>
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={settings.moderation.wordFilter.caseSensitive || false} 
+                              onChange={() => handleToggle('moderation.wordFilter.caseSensitive')}
+                            />
+                            <div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Case Sensitive</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Match exact casing only (off = catches BUY, Buy, bUy)</div>
+                            </div>
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={settings.moderation.wordFilter.detectBypass !== false} 
+                              onChange={() => handleToggle('moderation.wordFilter.detectBypass')}
+                            />
+                            <div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Bypass Detection</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Detect bypass attempts using spaces, dots, or leetspeak (b.u.y, $ell)</div>
+                            </div>
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '12px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={settings.moderation.wordFilter.warnBeforePunishment !== false} 
+                              onChange={() => handleToggle('moderation.wordFilter.warnBeforePunishment')}
+                            />
+                            <div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Warn Before Timeout</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Send warnings before applying timeout punishment</div>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section B: Violation Settings */}
+                  {settings.moderation.wordFilter.enabled && (
+                    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '16px' }}>Violation & Punishment Settings</h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Violations Before Timeout</label>
+                          <input 
+                            type="number" 
+                            min="1" 
+                            max="50"
+                            value={settings.moderation.wordFilter.maxViolations ?? 3}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              handleInputChange('moderation.wordFilter.maxViolations', val === '' ? '' : parseInt(val));
+                            }}
+                            className="glass-input" 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Violation Window (seconds)</label>
+                          <input 
+                            type="number" 
+                            min="10" 
+                            max="3600"
+                            value={settings.moderation.wordFilter.violationWindow === '' ? '' : ((settings.moderation.wordFilter.violationWindow || 300000) / 1000)}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              handleInputChange('moderation.wordFilter.violationWindow', val === '' ? '' : parseInt(val) * 1000);
+                            }}
+                            className="glass-input" 
+                          />
+                          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>Time window for counting violations</p>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Timeout Duration (minutes)</label>
+                          <input 
+                            type="number" 
+                            min="1" 
+                            max="10080"
+                            value={settings.moderation.wordFilter.timeoutDuration ?? 10}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              handleInputChange('moderation.wordFilter.timeoutDuration', val === '' ? '' : parseInt(val));
+                            }}
+                            className="glass-input" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section C: Blocked Words Manager */}
+                  {settings.moderation.wordFilter.enabled && (
+                    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '8px' }}>Blocked Words & Phrases</h3>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Add words, phrases, or domains that the bot should block. Use the quick-add buttons to load common presets.</p>
+                      
+                      {/* Quick-add presets */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                        {[
+                          { label: '🔗 Links & URLs', category: 'links', words: ['http://', 'https://', 'www.', 'youtube.com', 'youtu.be', 'youtube'] },
+                          { label: '💬 Discord Invites', category: 'invites', words: ['discord.gg', 'discord.com', 'discordapp.com', 'discord invite', 'join my server'] },
+                          { label: '🛒 Ads & Sales', category: 'ads', words: ['buy', 'sell', 'trade', 'cheap', 'discount', 'shop'] },
+                          { label: '📩 DM Requests', category: 'dm', words: ['dm me', 'pm me', 'contact me'] },
+                          { label: '🌐 Social Media', category: 'social', words: ['github.com', 'twitter.com', 'x.com', 'instagram.com', 'telegram', 't.me'] },
+                          { label: '🚨 Scam Phrases', category: 'scam', words: ['free nitro', 'free robux', 'token', 'grabber', 'ip logger'] }
+                        ].map(preset => (
+                          <button
+                            key={preset.label}
+                            type="button"
+                            onClick={() => {
+                              const currentWords = settings.moderation.wordFilter.blockedWords || [];
+                              const newWords = preset.words
+                                .filter(w => !currentWords.some(cw => cw.word.toLowerCase() === w.toLowerCase()))
+                                .map(w => ({ word: w, category: preset.category, isRegex: false }));
+                              if (newWords.length > 0) {
+                                handleInputChange('moderation.wordFilter.blockedWords', [...currentWords, ...newWords]);
+                                showNotification(`Added ${newWords.length} word(s) from "${preset.label}" preset.`);
+                              } else {
+                                showNotification('All words from this preset are already added.');
+                              }
+                            }}
+                            style={{
+                              padding: '6px 14px',
+                              borderRadius: '8px',
+                              border: '1px solid var(--border-color)',
+                              background: 'rgba(255,255,255,0.03)',
+                              color: 'var(--text-primary)',
+                              fontSize: '0.8rem',
+                              fontWeight: '500',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)'; e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Add single word */}
+                      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                        <input
+                          type="text"
+                          placeholder="Type a word or phrase..."
+                          value={wordFilterNewWord}
+                          onChange={(e) => setWordFilterNewWord(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (!wordFilterNewWord.trim()) return;
+                              const currentWords = settings.moderation.wordFilter.blockedWords || [];
+                              if (currentWords.some(w => w.word.toLowerCase() === wordFilterNewWord.trim().toLowerCase())) {
+                                setErrorMsg('This word is already in the blocked list.');
+                                return;
+                              }
+                              handleInputChange('moderation.wordFilter.blockedWords', [...currentWords, { word: wordFilterNewWord.trim(), category: wordFilterNewCategory, isRegex: false }]);
+                              setWordFilterNewWord('');
+                            }
+                          }}
+                          className="glass-input"
+                          style={{ flex: 1 }}
+                        />
+                        <select
+                          value={wordFilterNewCategory}
+                          onChange={(e) => setWordFilterNewCategory(e.target.value)}
+                          className="glass-input"
+                          style={{ width: '140px' }}
+                        >
+                          <option value="custom">Custom</option>
+                          <option value="links">Links</option>
+                          <option value="invites">Invites</option>
+                          <option value="ads">Ads</option>
+                          <option value="dm">DM Requests</option>
+                          <option value="social">Social</option>
+                          <option value="scam">Scam</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!wordFilterNewWord.trim()) return;
+                            const currentWords = settings.moderation.wordFilter.blockedWords || [];
+                            if (currentWords.some(w => w.word.toLowerCase() === wordFilterNewWord.trim().toLowerCase())) {
+                              setErrorMsg('This word is already in the blocked list.');
+                              return;
+                            }
+                            handleInputChange('moderation.wordFilter.blockedWords', [...currentWords, { word: wordFilterNewWord.trim(), category: wordFilterNewCategory, isRegex: false }]);
+                            setWordFilterNewWord('');
+                          }}
+                          className="btn-primary"
+                          style={{ padding: '0 20px', height: '46px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <Plus size={16} /> Add
+                        </button>
+                      </div>
+
+                      {/* Bulk import toggle */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowWordFilterBulk(!showWordFilterBulk)}
+                          style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.85rem', cursor: 'pointer', padding: '0', textDecoration: 'underline' }}
+                        >
+                          {showWordFilterBulk ? 'Hide Bulk Import' : '📋 Bulk Import (paste multiple words)'}
+                        </button>
+                        {showWordFilterBulk && (
+                          <div style={{ marginTop: '10px' }}>
+                            <textarea
+                              rows="4"
+                              placeholder="Paste one word or phrase per line..."
+                              value={wordFilterBulkInput}
+                              onChange={(e) => setWordFilterBulkInput(e.target.value)}
+                              className="glass-input"
+                              style={{ fontFamily: 'monospace', width: '100%' }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const lines = wordFilterBulkInput.split('\n').map(l => l.trim()).filter(Boolean);
+                                if (lines.length === 0) return;
+                                const currentWords = settings.moderation.wordFilter.blockedWords || [];
+                                const newWords = lines
+                                  .filter(w => !currentWords.some(cw => cw.word.toLowerCase() === w.toLowerCase()))
+                                  .map(w => ({ word: w, category: wordFilterNewCategory, isRegex: false }));
+                                if (newWords.length > 0) {
+                                  handleInputChange('moderation.wordFilter.blockedWords', [...currentWords, ...newWords]);
+                                  showNotification(`Added ${newWords.length} new word(s) via bulk import.`);
+                                }
+                                setWordFilterBulkInput('');
+                                setShowWordFilterBulk(false);
+                              }}
+                              className="btn-primary"
+                              style={{ marginTop: '8px', padding: '8px 20px' }}
+                            >
+                              Import Words
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Blocked words list */}
+                      <div style={{ maxHeight: '350px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                        {(settings.moderation.wordFilter.blockedWords || []).length === 0 ? (
+                          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            <div style={{ fontSize: '2rem', marginBottom: '8px' }}>🛡️</div>
+                            <p style={{ margin: 0 }}>No blocked words yet. Add words above or use the quick-add presets.</p>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {(settings.moderation.wordFilter.blockedWords || []).map((entry, idx) => (
+                              <div key={idx} style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'space-between', 
+                                padding: '10px 16px',
+                                borderBottom: idx < settings.moderation.wordFilter.blockedWords.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <code style={{ fontSize: '0.85rem', color: '#f1f5f9', background: 'rgba(99,102,241,0.1)', padding: '3px 8px', borderRadius: '4px' }}>{entry.word}</code>
+                                  <span style={{ 
+                                    fontSize: '0.65rem', 
+                                    fontWeight: '700', 
+                                    textTransform: 'uppercase', 
+                                    letterSpacing: '0.05em',
+                                    padding: '2px 8px', 
+                                    borderRadius: '999px', 
+                                    background: entry.category === 'scam' ? 'rgba(239,68,68,0.15)' : entry.category === 'links' ? 'rgba(59,130,246,0.15)' : entry.category === 'invites' ? 'rgba(139,92,246,0.15)' : entry.category === 'ads' ? 'rgba(245,158,11,0.15)' : entry.category === 'social' ? 'rgba(6,182,212,0.15)' : entry.category === 'dm' ? 'rgba(16,185,129,0.15)' : 'rgba(100,116,139,0.15)',
+                                    color: entry.category === 'scam' ? '#f87171' : entry.category === 'links' ? '#60a5fa' : entry.category === 'invites' ? '#a78bfa' : entry.category === 'ads' ? '#fbbf24' : entry.category === 'social' ? '#22d3ee' : entry.category === 'dm' ? '#34d399' : '#94a3b8'
+                                  }}>{entry.category || 'custom'}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...(settings.moderation.wordFilter.blockedWords || [])];
+                                    updated.splice(idx, 1);
+                                    handleInputChange('moderation.wordFilter.blockedWords', updated);
+                                  }}
+                                  style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px', display: 'flex', opacity: 0.7 }}
+                                  onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                                  onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {(settings.moderation.wordFilter.blockedWords || []).length > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            {settings.moderation.wordFilter.blockedWords.length} word{settings.moderation.wordFilter.blockedWords.length !== 1 ? 's' : ''} configured
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to remove ALL blocked words?')) {
+                                handleInputChange('moderation.wordFilter.blockedWords', []);
+                              }
+                            }}
+                            style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', textDecoration: 'underline' }}
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Section D: Exemptions */}
+                  {settings.moderation.wordFilter.enabled && (
+                    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '16px' }}>Exemptions</h3>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Exempt specific roles, channels, or users from the word filter.</p>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                        {/* Exempt Roles */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Exempt Roles</label>
+                          <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                            {roles.map(role => (
+                              <label key={role.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', cursor: 'pointer', fontSize: '0.85rem' }}>
+                                <input 
+                                  type="checkbox"
+                                  checked={(settings.moderation.wordFilter.exemptRoles || []).includes(role.id)}
+                                  onChange={(e) => {
+                                    const current = [...(settings.moderation.wordFilter.exemptRoles || [])];
+                                    if (e.target.checked) {
+                                      current.push(role.id);
+                                    } else {
+                                      const index = current.indexOf(role.id);
+                                      if (index > -1) current.splice(index, 1);
+                                    }
+                                    handleInputChange('moderation.wordFilter.exemptRoles', current);
+                                  }}
+                                />
+                                <span style={{ color: role.color ? `#${role.color.toString(16).padStart(6, '0')}` : 'inherit' }}>@{role.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Exempt Channels */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Exempt Channels</label>
+                          <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '10px', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                            {channels.map(ch => (
+                              <label key={ch.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', cursor: 'pointer', fontSize: '0.85rem' }}>
+                                <input 
+                                  type="checkbox"
+                                  checked={(settings.moderation.wordFilter.exemptChannels || []).includes(ch.id)}
+                                  onChange={(e) => {
+                                    const current = [...(settings.moderation.wordFilter.exemptChannels || [])];
+                                    if (e.target.checked) {
+                                      current.push(ch.id);
+                                    } else {
+                                      const index = current.indexOf(ch.id);
+                                      if (index > -1) current.splice(index, 1);
+                                    }
+                                    handleInputChange('moderation.wordFilter.exemptChannels', current);
+                                  }}
+                                />
+                                #{ch.name}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section E: Log Channel */}
+                  {settings.moderation.wordFilter.enabled && (
+                    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '8px' }}>Log Channel</h3>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>Optionally post word filter events to a log channel in your server.</p>
+                      <select
+                        value={settings.moderation.wordFilter.logChannelId || ''}
+                        onChange={(e) => handleInputChange('moderation.wordFilter.logChannelId', e.target.value)}
+                        className="glass-input"
+                        style={{ maxWidth: '400px' }}
+                      >
+                        <option value="">None (disabled)</option>
+                        {channels.map(ch => (
+                          <option key={ch.id} value={ch.id}>#{ch.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Section F: Word Filter Logs */}
+                  {settings.moderation.wordFilter.enabled && (
+                    <div className="glass-panel" style={{ padding: '24px', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <div>
+                          <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>Recent Filter Activity</h3>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last 100 word filter events (auto-expires after 30 days)</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setWordFilterLogsLoading(true);
+                            api.getWordFilterLogs(guildId).then(data => {
+                              setWordFilterLogs(data || []);
+                            }).catch(err => {
+                              console.error('Failed to refresh word filter logs:', err.message);
+                            }).finally(() => setWordFilterLogsLoading(false));
+                          }}
+                          className="btn-secondary"
+                          style={{ padding: '6px 14px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <RotateCw size={14} /> Refresh
+                        </button>
+                      </div>
+
+                      {wordFilterLogsLoading ? (
+                        <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Loading logs...</div>
+                      ) : wordFilterLogs.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📋</div>
+                          <p style={{ margin: 0 }}>No word filter events recorded yet.</p>
+                        </div>
+                      ) : (
+                        <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                            <thead>
+                              <tr style={{ background: 'rgba(0,0,0,0.3)', position: 'sticky', top: 0 }}>
+                                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Time</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>User</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Channel</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Matched</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Action</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: '600', color: 'var(--text-secondary)' }}>Message</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {wordFilterLogs.map((log, idx) => (
+                                <tr key={log._id || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                  <td style={{ padding: '8px 12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                    {new Date(log.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                  </td>
+                                  <td style={{ padding: '8px 12px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      {log.avatar && <img src={log.avatar} style={{ width: '20px', height: '20px', borderRadius: '50%' }} alt="" />}
+                                      <span style={{ color: '#f1f5f9', fontWeight: '500' }}>{log.username || log.userId}</span>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>#{log.channelName || 'unknown'}</td>
+                                  <td style={{ padding: '8px 12px' }}>
+                                    <code style={{ fontSize: '0.78rem', background: 'rgba(99,102,241,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#a5b4fc' }}>{log.matchedWord}</code>
+                                  </td>
+                                  <td style={{ padding: '8px 12px' }}>
+                                    <span style={{
+                                      fontSize: '0.7rem',
+                                      fontWeight: '700',
+                                      textTransform: 'uppercase',
+                                      padding: '2px 8px',
+                                      borderRadius: '999px',
+                                      background: log.action === 'timeout' ? 'rgba(239,68,68,0.15)' : log.action === 'warned' ? 'rgba(245,158,11,0.15)' : 'rgba(59,130,246,0.15)',
+                                      color: log.action === 'timeout' ? '#f87171' : log.action === 'warned' ? '#fbbf24' : '#60a5fa'
+                                    }}>
+                                      {log.action}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '8px 12px', color: 'var(--text-muted)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {log.messageContent ? log.messageContent.substring(0, 80) : '—'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                 </div>
               )}
 

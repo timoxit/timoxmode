@@ -272,5 +272,7 @@ export const api = {
   }),
   deleteWebhookTemplate: (guildId, templateId) => request(`/settings/${guildId}/webhook-announcement/templates/${templateId}`, {
     method: 'DELETE'
-  })
+  }),
+  getWordFilterLogs: (guildId) => request(`/settings/${guildId}/word-filter-logs`)
 };
+
