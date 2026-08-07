@@ -5826,6 +5826,31 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         >
                                           😀 Standard Unicode
                                         </button>
+                                        <button
+                                          type="button"
+                                          title="Refresh custom emojis from server and bot"
+                                          onClick={async () => {
+                                            try {
+                                              const emojiData = await api.getEmojis(guildId);
+                                              if (Array.isArray(emojiData)) setServerEmojis(emojiData);
+                                            } catch (err) {
+                                              console.error(err);
+                                            }
+                                          }}
+                                          style={{
+                                            padding: '6px 10px',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            background: 'rgba(255,255,255,0.06)',
+                                            color: 'var(--text-secondary)',
+                                            transition: 'all 0.15s'
+                                          }}
+                                        >
+                                          🔄
+                                        </button>
                                       </div>
 
                                       {/* Emoji Grid */}
