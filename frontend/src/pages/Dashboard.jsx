@@ -5727,6 +5727,10 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         onChange={async (e) => {
                                           const file = e.target.files?.[0];
                                           if (!file) return;
+                                          if (typeof api?.uploadEmoji !== 'function') {
+                                            setErrorMsg('The website update is deploying. Please hard refresh your browser (Ctrl + Shift + R).');
+                                            return;
+                                          }
                                           setUploadingEmoji(true);
                                           setErrorMsg(null);
                                           try {
