@@ -552,6 +552,14 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
   const [pollThumbnailUrl, setPollThumbnailUrl] = useState('');
   const [creatingPoll, setCreatingPoll] = useState(false);
 
+  // Ticket Category Management State
+  const [serverEmojis, setServerEmojis] = useState([]);
+  const [editingCategory, setEditingCategory] = useState(null); // null | { id, label, description, emoji, channelPrefix }
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [emojiPickerTab, setEmojiPickerTab] = useState('unicode'); // 'unicode' | 'server'
+
+
   // Webhook Announcement States
   const [webhookChannelId, setWebhookChannelId] = useState('');
   const [useCustomWebhookUrl, setUseCustomWebhookUrl] = useState(false);
@@ -1451,6 +1459,21 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
       fetchMembers();
     }
   }, [activeTab, guildId, settings?.antinuke?.whitelistedUsers, settings?.moderation?.whitelistedUsers]);
+
+  // Load server custom emojis when ticket tab is active
+  useEffect(() => {
+    if (activeTab === 'tickets') {
+      const fetchEmojis = async () => {
+        try {
+          const emojiData = await api.getEmojis(guildId);
+          setServerEmojis(emojiData || []);
+        } catch (err) {
+          console.error('[Dashboard] Failed to fetch server emojis:', err);
+        }
+      };
+      fetchEmojis();
+    }
+  }, [activeTab, guildId]);
 
   // Whenever whitelistedUsers changes or allMembers changes, fetch details for any IDs we don't have cached yet
   useEffect(() => {
@@ -5323,7 +5346,50 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
               )}
 
               {/* TAB 9: TICKET SYSTEM */}
-              {activeTab === 'tickets' && (
+              {activeTab === 'tickets' && (() => {
+                const ticketCategories = settings.tickets?.categories || [];
+                const useSelectMenu = ticketCategories.length >= 2;
+
+                // Unicode emoji palette for the picker
+                const unicodeEmojis = ['🎫','🐛','💰','💡','🛡️','⚙️','📝','🔧','❓','🎮','📦','🌟','💬','🔔','📋','🎯','🔥','💎','🚀','⭐','✨','🎉','🏆','💪','🤝','📊','🔒','🎨','📱','💻','🌐','📧','📞','🏠','🔍','⚡','🎵','📸','🛒','❤️','💜','💙','💚','💛','🧡','🤖','👑','🦋','🌈'];
+
+                const handleSaveCategory = () => {
+                  if (!editingCategory || !editingCategory.label) return;
+                  const current = [...(settings.tickets?.categories || [])];
+                  const catId = editingCategory.id || editingCategory.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 30) || `cat-${Date.now()}`;
+                  const catData = { ...editingCategory, id: catId };
+                  if (!catData.channelPrefix) catData.channelPrefix = catId;
+
+                  const existingIdx = current.findIndex(c => c.id === catId);
+                  if (existingIdx >= 0) {
+                    current[existingIdx] = catData;
+                  } else {
+                    current.push(catData);
+                  }
+                  handleInputChange('tickets.categories', current);
+                  setEditingCategory(null);
+                  setShowCategoryForm(false);
+                  setShowEmojiPicker(false);
+                };
+
+                const handleDeleteCategory = (catId) => {
+                  const current = [...(settings.tickets?.categories || [])];
+                  handleInputChange('tickets.categories', current.filter(c => c.id !== catId));
+                };
+
+                const handleEditCategory = (cat) => {
+                  setEditingCategory({ ...cat });
+                  setShowCategoryForm(true);
+                  setShowEmojiPicker(false);
+                };
+
+                const handleNewCategory = () => {
+                  setEditingCategory({ id: '', label: '', description: '', emoji: '🎫', channelPrefix: '' });
+                  setShowCategoryForm(true);
+                  setShowEmojiPicker(false);
+                };
+
+                return (
                 <div>
 
                   <div className="preview-layout-container">
@@ -5401,13 +5467,13 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
 
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                             <div>
-                              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Panel Button Label</label>
+                              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>{useSelectMenu ? 'Select Menu Placeholder' : 'Panel Button Label'}</label>
                               <input 
                                 type="text" 
                                 value={settings.tickets.buttonText || ''}
                                 onChange={(e) => handleInputChange('tickets.buttonText', e.target.value)}
                                 className="glass-input"
-                                placeholder="Create Ticket"
+                                placeholder={useSelectMenu ? '🎫 Select a ticket category...' : 'Create Ticket'}
                               />
                             </div>
 
@@ -5435,7 +5501,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                           </div>
 
                           <div>
-                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Ticket Channel Welcome Message (Supports {`{user}`}, {`{server}`})</label>
+                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Ticket Channel Welcome Message (Supports {`{user}`}, {`{server}`}, {`{category}`})</label>
                             <textarea 
                               rows="3"
                               value={settings.tickets.ticketMessage || ''}
@@ -5445,10 +5511,350 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                             />
                           </div>
 
+                          {/* ─── Ticket Categories Manager ─── */}
+                          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                              <div>
+                                <h4 style={{ fontWeight: '700', fontSize: '1rem', marginBottom: '2px' }}>Ticket Categories</h4>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                  {ticketCategories.length >= 2
+                                    ? `${ticketCategories.length} categories configured — a select menu dropdown will be used.`
+                                    : ticketCategories.length === 1
+                                      ? '1 category configured — add at least 2 to enable the dropdown select menu.'
+                                      : 'No categories configured — the simple button will be used. Add 2+ categories to enable a dropdown menu.'}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleNewCategory}
+                                className="btn-success"
+                                style={{ padding: '6px 14px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+                              >
+                                <Plus size={14} /> Add Category
+                              </button>
+                            </div>
+
+                            {/* Category Cards */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {ticketCategories.map((cat, idx) => (
+                                <div key={cat.id || idx} style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '12px',
+                                  padding: '12px 16px',
+                                  borderRadius: '10px',
+                                  background: 'rgba(255,255,255,0.03)',
+                                  border: '1px solid var(--border-color)',
+                                  transition: 'border-color 0.2s',
+                                }}>
+                                  {/* Emoji Preview */}
+                                  <span style={{ fontSize: '1.5rem', width: '36px', textAlign: 'center', flexShrink: 0 }}>
+                                    {cat.emoji && cat.emoji.match(/<a?:\w+:(\d+)>/) ? (
+                                      <img 
+                                        src={`https://cdn.discordapp.com/emojis/${cat.emoji.match(/<a?:\w+:(\d+)>/)[1]}.${cat.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=32`}
+                                        alt="" 
+                                        style={{ width: '28px', height: '28px', verticalAlign: 'middle' }}
+                                      />
+                                    ) : (cat.emoji || '🎫')}
+                                  </span>
+
+                                  {/* Info */}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontWeight: '600', fontSize: '0.9rem' }}>{cat.label}</div>
+                                    {cat.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.description}</div>}
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>Prefix: <code>{cat.channelPrefix || cat.id}</code></div>
+                                  </div>
+
+                                  {/* Actions */}
+                                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleEditCategory(cat)}
+                                      style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: 'none', borderRadius: '6px', padding: '5px 10px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                    >
+                                      <Edit3 size={12} /> Edit
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleDeleteCategory(cat.id)}
+                                      style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: 'none', borderRadius: '6px', padding: '5px 10px', fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                    >
+                                      <Trash2 size={12} /> Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Category Add/Edit Form */}
+                            {showCategoryForm && editingCategory && (
+                              <div style={{
+                                marginTop: '12px',
+                                padding: '16px',
+                                borderRadius: '12px',
+                                background: 'rgba(59,130,246,0.05)',
+                                border: '1px solid rgba(59,130,246,0.2)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '12px'
+                              }}>
+                                <h5 style={{ fontWeight: '700', fontSize: '0.9rem', margin: 0, color: '#60a5fa' }}>
+                                  {editingCategory.id && ticketCategories.some(c => c.id === editingCategory.id) ? 'Edit Category' : 'New Category'}
+                                </h5>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                  <div>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Label *</label>
+                                    <input 
+                                      type="text"
+                                      value={editingCategory.label}
+                                      onChange={(e) => setEditingCategory(prev => ({ ...prev, label: e.target.value }))}
+                                      className="glass-input"
+                                      placeholder="e.g. General Support"
+                                      style={{ fontSize: '0.85rem' }}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Channel Prefix</label>
+                                    <input 
+                                      type="text"
+                                      value={editingCategory.channelPrefix}
+                                      onChange={(e) => setEditingCategory(prev => ({ ...prev, channelPrefix: e.target.value }))}
+                                      className="glass-input"
+                                      placeholder="e.g. general"
+                                      style={{ fontSize: '0.85rem' }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Description (shown in dropdown)</label>
+                                  <input 
+                                    type="text"
+                                    value={editingCategory.description}
+                                    onChange={(e) => setEditingCategory(prev => ({ ...prev, description: e.target.value }))}
+                                    className="glass-input"
+                                    placeholder="e.g. Get general help from our team"
+                                    maxLength={100}
+                                    style={{ fontSize: '0.85rem' }}
+                                  />
+                                </div>
+
+                                {/* Emoji Picker */}
+                                <div>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Emoji</label>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                      style={{
+                                        width: '44px',
+                                        height: '44px',
+                                        borderRadius: '10px',
+                                        border: '2px solid var(--border-color)',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        fontSize: '1.4rem',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'border-color 0.2s, transform 0.15s',
+                                      }}
+                                      onMouseEnter={(e) => { e.target.style.borderColor = '#60a5fa'; e.target.style.transform = 'scale(1.05)'; }}
+                                      onMouseLeave={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.transform = 'scale(1)'; }}
+                                    >
+                                      {editingCategory.emoji && editingCategory.emoji.match(/<a?:\w+:(\d+)>/) ? (
+                                        <img 
+                                          src={`https://cdn.discordapp.com/emojis/${editingCategory.emoji.match(/<a?:\w+:(\d+)>/)[1]}.${editingCategory.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=32`}
+                                          alt="" style={{ width: '28px', height: '28px' }}
+                                        />
+                                      ) : (editingCategory.emoji || '🎫')}
+                                    </button>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Click to change emoji</span>
+                                  </div>
+
+                                  {/* Emoji Picker Dropdown */}
+                                  {showEmojiPicker && (
+                                    <div style={{
+                                      marginTop: '8px',
+                                      padding: '12px',
+                                      borderRadius: '10px',
+                                      background: 'rgba(0,0,0,0.4)',
+                                      border: '1px solid var(--border-color)',
+                                      maxHeight: '260px',
+                                      overflow: 'hidden',
+                                      display: 'flex',
+                                      flexDirection: 'column'
+                                    }}>
+                                      {/* Tabs */}
+                                      <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
+                                        <button
+                                          type="button"
+                                          onClick={() => setEmojiPickerTab('unicode')}
+                                          style={{
+                                            flex: 1,
+                                            padding: '6px 10px',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            background: emojiPickerTab === 'unicode' ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.06)',
+                                            color: emojiPickerTab === 'unicode' ? '#60a5fa' : 'var(--text-secondary)',
+                                            transition: 'all 0.15s'
+                                          }}
+                                        >
+                                          😀 Unicode
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setEmojiPickerTab('server')}
+                                          style={{
+                                            flex: 1,
+                                            padding: '6px 10px',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            background: emojiPickerTab === 'server' ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.06)',
+                                            color: emojiPickerTab === 'server' ? '#60a5fa' : 'var(--text-secondary)',
+                                            transition: 'all 0.15s'
+                                          }}
+                                        >
+                                          ✨ Server {serverEmojis.length > 0 && `(${serverEmojis.length})`}
+                                        </button>
+                                      </div>
+
+                                      {/* Emoji Grid */}
+                                      <div style={{ overflowY: 'auto', flex: 1, maxHeight: '190px' }}>
+                                        {emojiPickerTab === 'unicode' && (
+                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(36px, 1fr))', gap: '4px' }}>
+                                            {unicodeEmojis.map((em, i) => (
+                                              <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => {
+                                                  setEditingCategory(prev => ({ ...prev, emoji: em }));
+                                                  setShowEmojiPicker(false);
+                                                }}
+                                                style={{
+                                                  width: '36px',
+                                                  height: '36px',
+                                                  borderRadius: '6px',
+                                                  border: editingCategory.emoji === em ? '2px solid #60a5fa' : '1px solid transparent',
+                                                  background: editingCategory.emoji === em ? 'rgba(59,130,246,0.15)' : 'transparent',
+                                                  fontSize: '1.2rem',
+                                                  cursor: 'pointer',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  justifyContent: 'center',
+                                                  transition: 'all 0.12s'
+                                                }}
+                                                onMouseEnter={(e) => { e.target.style.background = 'rgba(255,255,255,0.1)'; e.target.style.transform = 'scale(1.15)'; }}
+                                                onMouseLeave={(e) => { e.target.style.background = editingCategory.emoji === em ? 'rgba(59,130,246,0.15)' : 'transparent'; e.target.style.transform = 'scale(1)'; }}
+                                              >
+                                                {em}
+                                              </button>
+                                            ))}
+                                          </div>
+                                        )}
+
+                                        {emojiPickerTab === 'server' && (
+                                          <div>
+                                            {serverEmojis.length === 0 ? (
+                                              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No custom emojis found on this server.</p>
+                                            ) : (
+                                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: '4px' }}>
+                                                {serverEmojis.map(em => {
+                                                  const isSelected = editingCategory.emoji === em.identifier;
+                                                  return (
+                                                    <button
+                                                      key={em.id}
+                                                      type="button"
+                                                      title={`:${em.name}: ${em.animated ? '(animated)' : ''}`}
+                                                      onClick={() => {
+                                                        setEditingCategory(prev => ({ ...prev, emoji: em.identifier }));
+                                                        setShowEmojiPicker(false);
+                                                      }}
+                                                      style={{
+                                                        width: '40px',
+                                                        height: '40px',
+                                                        borderRadius: '6px',
+                                                        border: isSelected ? '2px solid #60a5fa' : '1px solid transparent',
+                                                        background: isSelected ? 'rgba(59,130,246,0.15)' : 'transparent',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        transition: 'all 0.12s',
+                                                        position: 'relative'
+                                                      }}
+                                                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'scale(1.15)'; }}
+                                                      onMouseLeave={(e) => { e.currentTarget.style.background = isSelected ? 'rgba(59,130,246,0.15)' : 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}
+                                                    >
+                                                      <img 
+                                                        src={em.url} 
+                                                        alt={em.name} 
+                                                        style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+                                                      />
+                                                      {em.animated && (
+                                                        <span style={{
+                                                          position: 'absolute',
+                                                          bottom: '1px',
+                                                          right: '1px',
+                                                          background: '#5865f2',
+                                                          color: '#fff',
+                                                          fontSize: '0.5rem',
+                                                          fontWeight: 'bold',
+                                                          padding: '0px 3px',
+                                                          borderRadius: '3px',
+                                                          lineHeight: '1.3'
+                                                        }}>GIF</span>
+                                                      )}
+                                                    </button>
+                                                  );
+                                                })}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Save / Cancel */}
+                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setShowCategoryForm(false); setEditingCategory(null); setShowEmojiPicker(false); }}
+                                    style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleSaveCategory}
+                                    disabled={!editingCategory.label}
+                                    className="btn-success"
+                                    style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+                                  >
+                                    {editingCategory.id && ticketCategories.some(c => c.id === editingCategory.id) ? 'Update Category' : 'Add Category'}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
                           <div className="glass-panel" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(16, 185, 129, 0.05)', borderColor: 'rgba(16, 185, 129, 0.2)' }}>
                             <div>
                               <h4 style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '2px' }}>Publish Panel to Discord</h4>
-                              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Send the support ticket box with the interactive button directly to the selected channel.</p>
+                              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                {useSelectMenu 
+                                  ? 'Send the support ticket panel with a category dropdown menu to the selected channel.'
+                                  : 'Send the support ticket box with the interactive button directly to the selected channel.'}
+                              </p>
                             </div>
                             <button 
                               type="button"
@@ -5480,27 +5886,87 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                         Live Discord Preview
                       </span>
                       {settings.tickets?.enabled && (
-                        <DiscordMessagePreview 
-                          botUser={{ username: user?.username }}
-                          guildName={guildName}
-                          guildIcon={guildIcon}
-                          message=""
-                          buttonEnabled={true}
-                          buttonLabel={settings.tickets.buttonText || 'Create Ticket'}
-                          buttonUrl=""
-                          embedEnabled={true}
-                          embedTitle={settings.tickets.title || 'Support Ticket'}
-                          embedDesc={settings.tickets.welcomeMessage || 'Click the button below to open a ticket. Our support team will help you shortly.'}
-                          embedColor="#2563eb"
-                          embedThumb=""
-                          embedImage=""
-                          isDM={false}
-                        />
+                        <>
+                          <DiscordMessagePreview 
+                            botUser={{ username: user?.username }}
+                            guildName={guildName}
+                            guildIcon={guildIcon}
+                            message=""
+                            buttonEnabled={!useSelectMenu}
+                            buttonLabel={!useSelectMenu ? (settings.tickets.buttonText || 'Create Ticket') : ''}
+                            buttonUrl=""
+                            embedEnabled={true}
+                            embedTitle={settings.tickets.title || 'Support Ticket'}
+                            embedDesc={settings.tickets.welcomeMessage || (useSelectMenu
+                              ? 'Select a category below to open a ticket. Our support team will help you shortly.'
+                              : 'Click the button below to open a ticket. Our support team will help you shortly.')}
+                            embedColor="#2563eb"
+                            embedThumb=""
+                            embedImage=""
+                            isDM={false}
+                          />
+
+                          {/* Select Menu Preview */}
+                          {useSelectMenu && (
+                            <div style={{
+                              marginTop: '-8px',
+                              padding: '8px 12px',
+                              background: 'rgba(0,0,0,0.2)',
+                              borderRadius: '8px',
+                              border: '1px solid var(--border-color)'
+                            }}>
+                              <div style={{
+                                background: '#1e1f22',
+                                border: '1px solid #3f4147',
+                                borderRadius: '4px',
+                                padding: '8px 12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                cursor: 'default'
+                              }}>
+                                <span style={{ color: '#949ba4', fontSize: '0.875rem' }}>
+                                  {settings.tickets.buttonText || '🎫 Select a ticket category...'}
+                                </span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#949ba4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                              </div>
+                              <div style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                {ticketCategories.slice(0, 5).map((cat, i) => (
+                                  <div key={cat.id || i} style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '6px 10px',
+                                    borderRadius: '3px',
+                                    background: i === 0 ? 'rgba(88,101,242,0.15)' : 'transparent',
+                                    cursor: 'default'
+                                  }}>
+                                    <span style={{ fontSize: '1rem', width: '20px', textAlign: 'center', flexShrink: 0 }}>
+                                      {cat.emoji && cat.emoji.match(/<a?:\w+:(\d+)>/) ? (
+                                        <img 
+                                          src={`https://cdn.discordapp.com/emojis/${cat.emoji.match(/<a?:\w+:(\d+)>/)[1]}.${cat.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=20`}
+                                          alt="" style={{ width: '18px', height: '18px', verticalAlign: 'middle' }}
+                                        />
+                                      ) : (cat.emoji || '🎫')}
+                                    </span>
+                                    <div>
+                                      <div style={{ fontSize: '0.85rem', color: '#dbdee1', fontWeight: '500' }}>{cat.label}</div>
+                                      {cat.description && <div style={{ fontSize: '0.7rem', color: '#949ba4' }}>{cat.description}</div>}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
               {/* TAB 5: ROLES & NICKNAMES */}
               {activeTab === 'roles' && (
