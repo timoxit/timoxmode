@@ -5549,9 +5549,9 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                 }}>
                                   {/* Emoji Preview */}
                                   <span style={{ fontSize: '1.5rem', width: '36px', textAlign: 'center', flexShrink: 0 }}>
-                                    {cat.emoji && cat.emoji.match(/<a?:\w+:(\d+)>/) ? (
+                                    {cat.emoji && cat.emoji.match(/<a?:[^:]+:(\d+)>/) ? (
                                       <img 
-                                        src={`https://cdn.discordapp.com/emojis/${cat.emoji.match(/<a?:\w+:(\d+)>/)[1]}.${cat.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=32`}
+                                        src={`https://cdn.discordapp.com/emojis/${cat.emoji.match(/<a?:[^:]+:(\d+)>/)[1]}.${cat.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=32`}
                                         alt="" 
                                         style={{ width: '28px', height: '28px', verticalAlign: 'middle' }}
                                       />
@@ -5659,18 +5659,40 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         transition: 'border-color 0.2s, transform 0.15s',
+                                        flexShrink: 0
                                       }}
                                       onMouseEnter={(e) => { e.target.style.borderColor = '#60a5fa'; e.target.style.transform = 'scale(1.05)'; }}
                                       onMouseLeave={(e) => { e.target.style.borderColor = 'var(--border-color)'; e.target.style.transform = 'scale(1)'; }}
                                     >
-                                      {editingCategory.emoji && editingCategory.emoji.match(/<a?:\w+:(\d+)>/) ? (
+                                      {editingCategory.emoji && editingCategory.emoji.match(/<a?:[^:]+:(\d+)>/) ? (
                                         <img 
-                                          src={`https://cdn.discordapp.com/emojis/${editingCategory.emoji.match(/<a?:\w+:(\d+)>/)[1]}.${editingCategory.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=32`}
+                                          src={`https://cdn.discordapp.com/emojis/${editingCategory.emoji.match(/<a?:[^:]+:(\d+)>/)[1]}.${editingCategory.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=32`}
                                           alt="" style={{ width: '28px', height: '28px' }}
                                         />
                                       ) : (editingCategory.emoji || '🎫')}
                                     </button>
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Click to change emoji</span>
+
+                                    <input 
+                                      type="text"
+                                      value={editingCategory.emoji || ''}
+                                      onChange={(e) => setEditingCategory(prev => ({ ...prev, emoji: e.target.value }))}
+                                      className="glass-input"
+                                      placeholder="e.g. 🎫 or <a:name:id>"
+                                      style={{ fontSize: '0.85rem', flex: 1 }}
+                                    />
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setShowEmojiPicker(!showEmojiPicker);
+                                        if (!showEmojiPicker && serverEmojis.length > 0) {
+                                          setEmojiPickerTab('server');
+                                        }
+                                      }}
+                                      style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '6px', padding: '8px 12px', fontSize: '0.8rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                    >
+                                      {showEmojiPicker ? 'Close Picker' : 'Pick Emoji'}
+                                    </button>
                                   </div>
 
                                   {/* Emoji Picker Dropdown */}
@@ -5690,24 +5712,6 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                       <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
                                         <button
                                           type="button"
-                                          onClick={() => setEmojiPickerTab('unicode')}
-                                          style={{
-                                            flex: 1,
-                                            padding: '6px 10px',
-                                            borderRadius: '6px',
-                                            border: 'none',
-                                            fontSize: '0.75rem',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            background: emojiPickerTab === 'unicode' ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.06)',
-                                            color: emojiPickerTab === 'unicode' ? '#60a5fa' : 'var(--text-secondary)',
-                                            transition: 'all 0.15s'
-                                          }}
-                                        >
-                                          😀 Unicode
-                                        </button>
-                                        <button
-                                          type="button"
                                           onClick={() => setEmojiPickerTab('server')}
                                           style={{
                                             flex: 1,
@@ -5722,7 +5726,25 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                             transition: 'all 0.15s'
                                           }}
                                         >
-                                          ✨ Custom Emojis {serverEmojis.length > 0 && `(${serverEmojis.length})`}
+                                          ✨ Custom / Bot Emojis {serverEmojis.length > 0 && `(${serverEmojis.length})`}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setEmojiPickerTab('unicode')}
+                                          style={{
+                                            flex: 1,
+                                            padding: '6px 10px',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            background: emojiPickerTab === 'unicode' ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.06)',
+                                            color: emojiPickerTab === 'unicode' ? '#60a5fa' : 'var(--text-secondary)',
+                                            transition: 'all 0.15s'
+                                          }}
+                                        >
+                                          😀 Standard Unicode
                                         </button>
                                       </div>
 
@@ -5944,9 +5966,9 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                     cursor: 'default'
                                   }}>
                                     <span style={{ fontSize: '1rem', width: '20px', textAlign: 'center', flexShrink: 0 }}>
-                                      {cat.emoji && cat.emoji.match(/<a?:\w+:(\d+)>/) ? (
+                                      {cat.emoji && cat.emoji.match(/<a?:[^:]+:(\d+)>/) ? (
                                         <img 
-                                          src={`https://cdn.discordapp.com/emojis/${cat.emoji.match(/<a?:\w+:(\d+)>/)[1]}.${cat.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=20`}
+                                          src={`https://cdn.discordapp.com/emojis/${cat.emoji.match(/<a?:[^:]+:(\d+)>/)[1]}.${cat.emoji.startsWith('<a:') ? 'gif' : 'png'}?size=20`}
                                           alt="" style={{ width: '18px', height: '18px', verticalAlign: 'middle' }}
                                         />
                                       ) : (cat.emoji || '🎫')}
