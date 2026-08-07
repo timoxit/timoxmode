@@ -5675,9 +5675,15 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                     <input 
                                       type="text"
                                       value={editingCategory.emoji || ''}
-                                      onChange={(e) => setEditingCategory(prev => ({ ...prev, emoji: e.target.value }))}
+                                      onChange={(e) => {
+                                        let val = e.target.value.trim();
+                                        if (/^\d{17,20}$/.test(val)) {
+                                          val = `<:emoji:${val}>`;
+                                        }
+                                        setEditingCategory(prev => ({ ...prev, emoji: val }));
+                                      }}
                                       className="glass-input"
-                                      placeholder="e.g. 🎫 or <a:name:id>"
+                                      placeholder="e.g. 🎫 or <a:emoji:1535201693925507104>"
                                       style={{ fontSize: '0.85rem', flex: 1 }}
                                     />
 
