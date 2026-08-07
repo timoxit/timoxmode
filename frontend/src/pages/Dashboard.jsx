@@ -5734,7 +5734,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                             if (res.emoji) {
                                               setServerEmojis(prev => [res.emoji, ...prev]);
                                               setEditingCategory(prev => ({ ...prev, emoji: res.emoji.identifier }));
-                                              showNotification(res.message || 'Emoji uploaded to Discord!');
+                                              setSuccessMsg(res.message || 'Emoji uploaded to Discord!');
                                               setShowEmojiPicker(false);
                                             }
                                           } catch (err) {
