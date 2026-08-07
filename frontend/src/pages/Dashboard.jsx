@@ -558,6 +558,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiPickerTab, setEmojiPickerTab] = useState('unicode'); // 'unicode' | 'server'
+  const [uploadingEmoji, setUploadingEmoji] = useState(false);
 
 
   // Webhook Announcement States
@@ -5701,6 +5702,52 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                     >
                                       {showEmojiPicker ? 'Close Picker' : 'Pick Emoji'}
                                     </button>
+
+                                    <label
+                                      style={{
+                                        background: 'rgba(16,185,129,0.15)',
+                                        color: '#34d399',
+                                        border: '1px solid rgba(16,185,129,0.3)',
+                                        borderRadius: '6px',
+                                        padding: '8px 12px',
+                                        fontSize: '0.8rem',
+                                        cursor: uploadingEmoji ? 'wait' : 'pointer',
+                                        whiteSpace: 'nowrap',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        margin: 0
+                                      }}
+                                    >
+                                      <input 
+                                        type="file"
+                                        accept="image/png,image/gif,image/jpeg,image/webp"
+                                        style={{ display: 'none' }}
+                                        disabled={uploadingEmoji}
+                                        onChange={async (e) => {
+                                          const file = e.target.files?.[0];
+                                          if (!file) return;
+                                          setUploadingEmoji(true);
+                                          setErrorMsg(null);
+                                          try {
+                                            const res = await api.uploadEmoji(guildId, file);
+                                            if (res.emoji) {
+                                              setServerEmojis(prev => [res.emoji, ...prev]);
+                                              setEditingCategory(prev => ({ ...prev, emoji: res.emoji.identifier }));
+                                              showNotification(res.message || 'Emoji uploaded to Discord!');
+                                              setShowEmojiPicker(false);
+                                            }
+                                          } catch (err) {
+                                            console.error(err);
+                                            setErrorMsg(err.message || 'Failed to upload emoji to Discord.');
+                                          } finally {
+                                            setUploadingEmoji(false);
+                                            e.target.value = '';
+                                          }
+                                        }}
+                                      />
+                                      {uploadingEmoji ? 'Uploading...' : '📤 Upload Custom Emoji'}
+                                    </label>
                                   </div>
 
                                   {/* Emoji Picker Dropdown */}
