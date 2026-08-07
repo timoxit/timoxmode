@@ -5722,7 +5722,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                             transition: 'all 0.15s'
                                           }}
                                         >
-                                          ✨ Server {serverEmojis.length > 0 && `(${serverEmojis.length})`}
+                                          ✨ Custom Emojis {serverEmojis.length > 0 && `(${serverEmojis.length})`}
                                         </button>
                                       </div>
 
@@ -5763,7 +5763,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         {emojiPickerTab === 'server' && (
                                           <div>
                                             {serverEmojis.length === 0 ? (
-                                              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No custom emojis found on this server.</p>
+                                              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No custom emojis found on this server or bot application.</p>
                                             ) : (
                                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))', gap: '4px' }}>
                                                 {serverEmojis.map(em => {
@@ -5772,7 +5772,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                                     <button
                                                       key={em.id}
                                                       type="button"
-                                                      title={`:${em.name}: ${em.animated ? '(animated)' : ''}`}
+                                                      title={`:${em.name}: (${em.source || 'Custom'}) ${em.animated ? '[animated]' : ''}`}
                                                       onClick={() => {
                                                         setEditingCategory(prev => ({ ...prev, emoji: em.identifier }));
                                                         setShowEmojiPicker(false);
