@@ -5353,6 +5353,30 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                 // Unicode emoji palette for the picker
                 const unicodeEmojis = ['🎫','🐛','💰','💡','🛡️','⚙️','📝','🔧','❓','🎮','📦','🌟','💬','🔔','📋','🎯','🔥','💎','🚀','⭐','✨','🎉','🏆','💪','🤝','📊','🔒','🎨','📱','💻','🌐','📧','📞','🏠','🔍','⚡','🎵','📸','🛒','❤️','💜','💙','💚','💛','🧡','🤖','👑','🦋','🌈'];
 
+                // Preset built-in animated emojis for tickets & select menus
+                const builtInAnimatedEmojis = [
+                  { id: '852479524022419456', name: 'fire', label: 'Fire', identifier: '<a:fire:852479524022419456>' },
+                  { id: '852479523821092895', name: 'rocket', label: 'Rocket', identifier: '<a:rocket:852479523821092895>' },
+                  { id: '852479524177739777', name: 'diamond', label: 'Diamond', identifier: '<a:diamond:852479524177739777>' },
+                  { id: '852479524337254420', name: 'star', label: 'Star', identifier: '<a:star:852479524337254420>' },
+                  { id: '852479524257554442', name: 'crown', label: 'Crown', identifier: '<a:crown:852479524257554442>' },
+                  { id: '852479523913367582', name: 'gear', label: 'Settings', identifier: '<a:gear:852479523913367582>' },
+                  { id: '852479524307763230', name: 'shield', label: 'Shield', identifier: '<a:shield:852479524307763230>' },
+                  { id: '852479524119150612', name: 'money', label: 'Billing', identifier: '<a:money:852479524119150612>' },
+                  { id: '852479524039196722', name: 'bug', label: 'Bug Report', identifier: '<a:bug:852479524039196722>' },
+                  { id: '852479524047585320', name: 'bulb', label: 'Idea', identifier: '<a:bulb:852479524047585320>' },
+                  { id: '852479524098048030', name: 'game', label: 'Gaming', identifier: '<a:game:852479524098048030>' },
+                  { id: '852479524370808842', name: 'tada', label: 'Party', identifier: '<a:tada:852479524370808842>' },
+                  { id: '852479524412751912', name: 'verify', label: 'Verified', identifier: '<a:verify:852479524412751912>' },
+                  { id: '852479524227547146', name: 'question', label: 'Help/FAQ', identifier: '<a:question:852479524227547146>' },
+                  { id: '852479523984474142', name: 'bell', label: 'Alerts', identifier: '<a:bell:852479523984474142>' },
+                  { id: '852479524391780362', name: 'trophy', label: 'Trophy', identifier: '<a:trophy:852479524391780362>' },
+                  { id: '852479524186128414', name: 'lock', label: 'Security', identifier: '<a:lock:852479524186128414>' },
+                  { id: '852479524278534164', name: 'robot', label: 'Bot', identifier: '<a:robot:852479524278534164>' },
+                  { id: '852479524253360158', name: 'lightning', label: 'VIP', identifier: '<a:lightning:852479524253360158>' },
+                  { id: '852479524001251348', name: 'chat', label: 'General', identifier: '<a:chat:852479524001251348>' }
+                ];
+
                 const handleSaveCategory = () => {
                   if (!editingCategory || !editingCategory.label) return;
                   const current = [...(settings.tickets?.categories || [])];
@@ -5634,15 +5658,9 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                     value={editingCategory.description}
                                     onChange={(e) => setEditingCategory(prev => ({ ...prev, description: e.target.value }))}
                                     className="glass-input"
-                                    placeholder="e.g. Get general help from our team"
-                                    maxLength={100}
-                                    style={{ fontSize: '0.85rem' }}
-                                  />
-                                </div>
-
-                                {/* Emoji Picker */}
+                                    placeholder="e.g. Get g                                 {/* Emoji Picker */}
                                 <div>
-                                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Emoji</label>
+                                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Category Emoji</label>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <button
                                       type="button"
@@ -5658,6 +5676,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
+                                        flexShrink: 0,
                                         transition: 'border-color 0.2s, transform 0.15s',
                                       }}
                                       onMouseEnter={(e) => { e.target.style.borderColor = '#60a5fa'; e.target.style.transform = 'scale(1.05)'; }}
@@ -5670,7 +5689,32 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         />
                                       ) : (editingCategory.emoji || '🎫')}
                                     </button>
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Click to change emoji</span>
+
+                                    <input 
+                                      type="text"
+                                      value={editingCategory.emoji || ''}
+                                      onChange={(e) => setEditingCategory(prev => ({ ...prev, emoji: e.target.value }))}
+                                      className="glass-input"
+                                      placeholder="Emoji or <a:name:id>"
+                                      style={{ fontSize: '0.85rem', flex: 1 }}
+                                    />
+
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                      style={{
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid var(--border-color)',
+                                        background: showEmojiPicker ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.06)',
+                                        color: showEmojiPicker ? '#60a5fa' : 'var(--text-secondary)',
+                                        fontSize: '0.8rem',
+                                        cursor: 'pointer',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      {showEmojiPicker ? 'Close Picker' : 'Pick Emoji 🎨'}
+                                    </button>
                                   </div>
 
                                   {/* Emoji Picker Dropdown */}
@@ -5681,7 +5725,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                       borderRadius: '10px',
                                       background: 'rgba(0,0,0,0.4)',
                                       border: '1px solid var(--border-color)',
-                                      maxHeight: '260px',
+                                      maxHeight: '270px',
                                       overflow: 'hidden',
                                       display: 'flex',
                                       flexDirection: 'column'
@@ -5693,7 +5737,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                           onClick={() => setEmojiPickerTab('unicode')}
                                           style={{
                                             flex: 1,
-                                            padding: '6px 10px',
+                                            padding: '6px 8px',
                                             borderRadius: '6px',
                                             border: 'none',
                                             fontSize: '0.75rem',
@@ -5708,10 +5752,28 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         </button>
                                         <button
                                           type="button"
+                                          onClick={() => setEmojiPickerTab('animated')}
+                                          style={{
+                                            flex: 1,
+                                            padding: '6px 8px',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            cursor: 'pointer',
+                                            background: emojiPickerTab === 'animated' ? 'rgba(168,85,247,0.3)' : 'rgba(255,255,255,0.06)',
+                                            color: emojiPickerTab === 'animated' ? '#c084fc' : 'var(--text-secondary)',
+                                            transition: 'all 0.15s'
+                                          }}
+                                        >
+                                          🎬 Inbuilt Animated
+                                        </button>
+                                        <button
+                                          type="button"
                                           onClick={() => setEmojiPickerTab('server')}
                                           style={{
                                             flex: 1,
-                                            padding: '6px 10px',
+                                            padding: '6px 8px',
                                             borderRadius: '6px',
                                             border: 'none',
                                             fontSize: '0.75rem',
@@ -5727,7 +5789,7 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                       </div>
 
                                       {/* Emoji Grid */}
-                                      <div style={{ overflowY: 'auto', flex: 1, maxHeight: '190px' }}>
+                                      <div style={{ overflowY: 'auto', flex: 1, maxHeight: '200px' }}>
                                         {emojiPickerTab === 'unicode' && (
                                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(36px, 1fr))', gap: '4px' }}>
                                             {unicodeEmojis.map((em, i) => (
@@ -5757,6 +5819,58 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                                 {em}
                                               </button>
                                             ))}
+                                          </div>
+                                        )}
+
+                                        {emojiPickerTab === 'animated' && (
+                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(42px, 1fr))', gap: '6px' }}>
+                                            {builtInAnimatedEmojis.map(em => {
+                                              const isSelected = editingCategory.emoji === em.identifier;
+                                              return (
+                                                <button
+                                                  key={em.id}
+                                                  type="button"
+                                                  title={`${em.label} (:${em.name}:)`}
+                                                  onClick={() => {
+                                                    setEditingCategory(prev => ({ ...prev, emoji: em.identifier }));
+                                                    setShowEmojiPicker(false);
+                                                  }}
+                                                  style={{
+                                                    width: '42px',
+                                                    height: '42px',
+                                                    borderRadius: '8px',
+                                                    border: isSelected ? '2px solid #c084fc' : '1px solid rgba(255,255,255,0.08)',
+                                                    background: isSelected ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.02)',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    transition: 'all 0.12s',
+                                                    position: 'relative'
+                                                  }}
+                                                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(168,85,247,0.15)'; e.currentTarget.style.transform = 'scale(1.12)'; }}
+                                                  onMouseLeave={(e) => { e.currentTarget.style.background = isSelected ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.02)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                                                >
+                                                  <img 
+                                                    src={`https://cdn.discordapp.com/emojis/${em.id}.gif`} 
+                                                    alt={em.name} 
+                                                    style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+                                                  />
+                                                  <span style={{
+                                                    position: 'absolute',
+                                                    bottom: '1px',
+                                                    right: '1px',
+                                                    background: '#a855f7',
+                                                    color: '#fff',
+                                                    fontSize: '0.48rem',
+                                                    fontWeight: 'bold',
+                                                    padding: '0px 3px',
+                                                    borderRadius: '3px',
+                                                    lineHeight: '1.2'
+                                                  }}>GIF</span>
+                                                </button>
+                                              );
+                                            })}
                                           </div>
                                         )}
 
