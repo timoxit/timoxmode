@@ -1460,20 +1460,22 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
     }
   }, [activeTab, guildId, settings?.antinuke?.whitelistedUsers, settings?.moderation?.whitelistedUsers]);
 
-  // Load server custom emojis when ticket tab is active
+  // Load server custom emojis when ticket tab is active or emoji picker is opened
   useEffect(() => {
-    if (activeTab === 'tickets') {
+    if (activeTab === 'tickets' || showEmojiPicker) {
       const fetchEmojis = async () => {
         try {
           const emojiData = await api.getEmojis(guildId);
-          setServerEmojis(emojiData || []);
+          if (Array.isArray(emojiData)) {
+            setServerEmojis(emojiData);
+          }
         } catch (err) {
           console.error('[Dashboard] Failed to fetch server emojis:', err);
         }
       };
       fetchEmojis();
     }
-  }, [activeTab, guildId]);
+  }, [activeTab, showEmojiPicker, guildId]);
 
   // Whenever whitelistedUsers changes or allMembers changes, fetch details for any IDs we don't have cached yet
   useEffect(() => {
