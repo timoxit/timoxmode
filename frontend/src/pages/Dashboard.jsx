@@ -5727,15 +5727,36 @@ export default function Dashboard({ guildId, guildName, guildIcon, memberCount, 
                                         onChange={async (e) => {
                                           const file = e.target.files?.[0];
                                           if (!file) return;
-                                          if (typeof api?.uploadEmoji !== 'function') {
-                                            setErrorMsg('The website update is deploying. Please hard refresh your browser (Ctrl + Shift + R).');
-                                            return;
-                                          }
                                           setUploadingEmoji(true);
                                           setErrorMsg(null);
                                           try {
-                                            const res = await api.uploadEmoji(guildId, file);
-                                            if (res.emoji) {
+                                            let res;
+                                            if (typeof api?.uploadEmoji === 'function') {
+                                              res = await api.uploadEmoji(guildId, file);
+                                            } else {
+                                              const formData = new FormData();
+                                              formData.append('file', file);
+                                              const token = localStorage.getItem('timoxiter_token');
+                                              const baseUrl = window.location.port === '5173' || window.location.port === '5174'
+                                                ? 'http://localhost:2010/api'
+                                                : '/api';
+
+                                              const rawRes = await fetch(`${baseUrl}/guilds/${guildId}/emojis/upload`, {
+                                                method: 'POST',
+                                                headers: {
+                                                  ...(token && { Authorization: `Bearer ${token}` })
+                                                },
+                                                body: formData
+                                              });
+
+                                              if (!rawRes.ok) {
+                                                const errData = await rawRes.json().catch(() => ({}));
+                                                throw new Error(errData.error || 'Emoji upload failed.');
+                                              }
+                                              res = await rawRes.json();
+                                            }
+
+                                            if (res?.emoji) {
                                               setServerEmojis(prev => [res.emoji, ...prev]);
                                               setEditingCategory(prev => ({ ...prev, emoji: res.emoji.identifier }));
                                               setSuccessMsg(res.message || 'Emoji uploaded to Discord!');
